@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+{% block title %}Pill Reminder{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Pill Reminder Page ────────────────────────────────────────────── */
+.pill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+
+.pill-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.25rem 1.375rem;
+  position: relative;
+  transition: all .25s;
+}
+.pill-card:hover { box-shadow: 0 8px 24px rgba(37,99,235,0.10); border-color: rgba(37,99,235,0.3); }
+.pill-card.taken { opacity: 0.55; }
+.pill-card.taken .pill-name { text-decoration: line-through; }
+
+.pill-name { font-size: 1.05rem; font-weight: 700; margin-bottom: .25rem; }
+.pill-dose { font-size: .85rem; color: var(--text-secondary); margin-bottom: .75rem; }
+
+.pill-times { display: flex; flex-wrap: wrap; gap: .375rem; margin-bottom: .875rem; }
+.time-badge {
+  background: rgba(37,99,235,.1); color: var(--primary);
+  border: 1px solid rgba(37,99,235,.2);
+  padding: .2rem .65rem; border-radius: 999px; font-size: .78rem; font-weight: 600;
+}
+.time-badge.past { background: rgba(100,116,139,.08); color: var(--text-muted); border-color: var(--border-color); }
+.time-badge.upcoming { background: rgba(16,185,129,.1); color: #059669; border-color: rgba(16,185,129,.25); font-weight: 700; }
+
+.pill-card-actions { display: flex; gap: .5rem; }
+
+/* Countdown strip */
+.next-reminder-bar {
+  background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(13,148,136,.08));
+  border: 1px solid rgba(37,99,235,.18);
+  border-radius: 12px;
+  padding: .875rem 1.25rem;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+.next-reminder-bar .label { color: var(--text-secondary); font-size: .85rem; }
+.next-reminder-bar .pill-nm { font-weight: 700; font-size: 1rem; }
+.next-reminder-bar .countdown { font-size: 1.35rem; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+
+/* Modal backdrop */
+.modal-backdrop-custom {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 1050;
+  align-items: center; justify-content: center;
+}
+.modal-backdrop-custom.open { display: flex; }
+.modal-box {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 20px; padding: 2rem; width: 100%; max-width: 480px;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-box h5 { font-size: 1.1rem; font-weight: 800; margin-bottom: 1.25rem; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+.empty-state i { font-size: 3.5rem; margin-bottom: 1rem; opacity: .35; }
+
+/* Notification permission banner */
+.notif-banner {
+  background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.25);
+  border-radius: 12px; padding: .875rem 1.125rem;
+  display: flex; align-items: center; gap: .875rem;
+  margin-bottom: 1.5rem; font-size: .875rem;
+}
+.notif-banner.hidden { display: none; }
+
+/* Today summary pill */
+.today-pill-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 0; border-bottom: 1px solid var(--border-color);
+}
+.today-pill-row:last-child { border-bottom: none; }
+.today-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><i class="fas fa-bell me-2" style="color:var(--primary);"></i>Pill Reminder</h1>
+      <p class="page-subtitle">Never miss a dose — manage and track your daily medications.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,#2563eb,#0d9488);">
+      <i class="fas fa-pills"></i>
+    </div>
+  </div>
+
+  <!-- Notification permission banner -->
+  <div class="notif-banner" id="notif-banner">
+    <i class="fas fa-bell" style="color:#f59e0b;font-size:1.2rem;flex-shrink:0;"></i>
+    <span>Enable browser notifications so DoctorTalk can alert you when it's time to take your pills — even when you're on another tab.</span>
+    <button class="btn btn-sm btn-primary ms-auto" onclick="PillReminder.requestNotifPermission()">Enable Alerts</button>
+    <button class="btn btn-sm btn-ghost" onclick="document.getElementById('notif-banner').classList.add('hidden')" title="Dismiss">&times;</button>
+  </div>
+
+  <!-- Countdown to next reminder -->
+  <div class="next-reminder-bar" id="next-bar" style="display:none;">
+    <i class="fas fa-clock" style="font-size:1.4rem;color:var(--primary);flex-shrink:0;"></i>
+    <div>
+      <div class="label">Next reminder</div>
+      <div class="pill-nm" id="next-pill-name">—</div>
+    </div>
+    <div class="countdown ms-auto" id="next-countdown">—</div>
+  </div>
+
+  <!-- Today's schedule summary -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="fas fa-calendar-day me-2"></i>Today's Schedule</span>
+          <button class="btn btn-primary btn-sm" onclick="PillReminder.openModal()">
+            <i class="fas fa-plus me-1"></i>Add Pill
+          </button>
+        </div>
+        <div class="card-body" id="today-list">
+          <div class="empty-state" id="today-empty">
+            <i class="fas fa-pills d-block"></i>
+            <p>No pills added yet.<br>Click <strong>Add Pill</strong> to get started.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Quick stats -->
+      <div class="card mb-3">
+        <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Today's Progress</div>
+        <div class="card-body text-center" style="padding:1.5rem;">
+          <div style="font-size:3rem;font-weight:900;color:var(--primary);" id="stat-taken">0</div>
+          <div style="font-size:.85rem;color:var(--text-secondary);">doses taken today</div>
+          <div style="height:8px;background:var(--border-color);border-radius:99px;margin:1rem 0;overflow:hidden;">
+            <div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#2563eb,#0d9488);border-radius:99px;transition:width .4s;"></div>
+          </div>
+          <div style="font-size:.8rem;color:var(--text-muted);" id="stat-label">0 of 0 doses</div>
+        </div>
+      </div>
+
+      <!-- Tip card -->
+      <div class="card" style="background:linear-gradient(135deg,rgba(37,99,235,.06),rgba(13,148,136,.06));border-color:rgba(37,99,235,.18);">
+        <div class="card-body" style="font-size:.875rem;line-height:1.6;">
+          <div style="font-weight:700;margin-bottom:.5rem;"><i class="fas fa-lightbulb me-1" style="color:#f59e0b;"></i>Tip for Seniors</div>
+          <p style="color:var(--text-secondary);margin:0;">Taking medicines at the same time each day helps build a strong habit.
+          Try linking pill-time to a daily routine — like after breakfast or before bed.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All pills grid -->
+  <div class="card">
+    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <span><i class="fas fa-th me-2"></i>All My Pills</span>
+      <input type="text" class="form-control" placeholder="Search pills…" style="max-width:220px;"
+             oninput="PillReminder.search(this.value)">
+    </div>
+    <div class="card-body">
+      <div class="pill-grid" id="pill-grid">
+        <div class="empty-state" id="grid-empty" style="grid-column:1/-1;">
+          <i class="fas fa-capsules d-block"></i>
+          <p>Your pill list is empty.<br>Add your first medication above.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end page-wrapper -->
+
+<!-- ══ ADD / EDIT PILL MODAL ══════════════════════════════════════════ -->
+<div class="modal-backdrop-custom" id="pill-modal" onclick="PillReminder.closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h5 id="modal-title"><i class="fas fa-pills me-2" style="color:var(--primary);"></i>Add Pill</h5>
+
+    <div class="form-group mb-3">
+      <label class="form-label fw-600">Pill / Medicine Name <span style="color:red">*</span></label>
+      <input type="text" id="pill-name-inp" class="form-control" placeholder="e.g. Metformin, Aspirin…" maxlength="80">
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-600">Dosage</label>
+        <input type="text" id="pill-dose-inp" class="form-control" placeholder="e.g. 500 mg, 1 tablet">
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-600">Colour (optional)</label>
+        <input type="text" id="pill-color-inp" class="form-control" placeholder="e.g. White, Pink">
+      </div>
+    </div>
+
+    <div class="form-group mb-3">
+      <label class="form-label fw-600">Instructions</label>
+      <input type="text" id="pill-note-inp" class="form-control" placeholder="e.g. Take with food, After dinner…">
+    </div>
+
+    <div class="form-group mb-3">
+      <label class="form-label fw-600">Reminder Times <span style="color:red">*</span></label>
+      <div id="times-list" style="display:flex;flex-direction:column;gap:.5rem;"></div>
+      <button type="button" class="btn btn-ghost btn-sm mt-2" onclick="PillReminder.addTimeRow()">
+        <i class="fas fa-plus me-1"></i>Add Time
+      </button>
+    </div>
+
+    <div class="form-group mb-4">
+      <label class="form-label fw-600">Start Date</label>
+      <input type="date" id="pill-start-inp" class="form-control">
+    </div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="PillReminder.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="PillReminder.savePill()">
+        <i class="fas fa-save me-1"></i>Save
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   PillReminder — client-side pill & reminder manager
+   Data is persisted in localStorage under key "doctortalk_pills"
+═══════════════════════════════════════════════════════════════════ */
+const PillReminder = (() => {
+  const STORE_KEY = 'doctortalk_pills';
+  let pills = [];       // array of pill objects
+  let editId = null;    // null = new pill, else id being edited
+  let tickTimer = null; // interval for countdown
+  let notifTimers = {}; // scheduled notification timers keyed by "pillId_time"
+
+  // ── Persistence ──────────────────────────────────────────────────
+  function load() {
+    try { pills = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { pills = []; }
+  }
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(pills)); }
+
+  // ── Rendering ────────────────────────────────────────────────────
+  function render(filter = '') {
+    const lc = filter.toLowerCase();
+    const filtered = lc ? pills.filter(p => p.name.toLowerCase().includes(lc)) : pills;
+
+    // Grid
+    const grid = document.getElementById('pill-grid');
+    const gridEmpty = document.getElementById('grid-empty');
+    if (!filtered.length) { gridEmpty.style.display = 'block'; } else { gridEmpty.style.display = 'none'; }
+
+    // Remove old cards (keep grid-empty sentinel)
+    Array.from(grid.querySelectorAll('.pill-card')).forEach(c => c.remove());
+
+    const now = new Date();
+    const todayStr = toDateStr(now);
+
+    filtered.forEach(pill => {
+      const takenKey = `taken_${pill.id}_${todayStr}`;
+      const taken = localStorage.getItem(takenKey) === '1';
+
+      const card = document.createElement('div');
+      card.className = 'pill-card' + (taken ? ' taken' : '');
+      card.dataset.id = pill.id;
+
+      const timeBadges = (pill.times || []).map(t => {
+        const cls = getTimeBadgeClass(t, taken);
+        return `<span class="time-badge ${cls}">${formatTime(t)}</span>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="d-flex align-items-start justify-content-between mb-1">
+          <div>
+            <div class="pill-name">${esc(pill.name)}</div>
+            <div class="pill-dose">${esc(pill.dosage || '')}${pill.colour ? ' · ' + esc(pill.colour) : ''}</div>
+          </div>
+          <span style="width:14px;height:14px;border-radius:50%;background:${pillColor(pill.id)};flex-shrink:0;margin-top:4px;"></span>
+        </div>
+        ${pill.instructions ? `<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.6rem;"><i class="fas fa-info-circle me-1"></i>${esc(pill.instructions)}</div>` : ''}
+        <div class="pill-times">${timeBadges || '<span class="time-badge">No times set</span>'}</div>
+        <div class="pill-card-actions">
+          ${taken
+            ? `<button class="btn btn-sm btn-ghost" onclick="PillReminder.unmarkTaken('${pill.id}')"><i class="fas fa-undo me-1"></i>Undo</button>`
+            : `<button class="btn btn-sm btn-primary" onclick="PillReminder.markTaken('${pill.id}')"><i class="fas fa-check me-1"></i>Taken</button>`
+          }
+          <button class="btn btn-sm btn-ghost ms-auto" onclick="PillReminder.openModal('${pill.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-sm btn-ghost" onclick="PillReminder.deletePill('${pill.id}')" title="Delete" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    renderToday(now, todayStr);
+    renderStats(todayStr);
+    scheduleNextCountdown();
+  }
+
+  function renderToday(now, todayStr) {
+    const todayList = document.getElementById('today-list');
+    const todayEmpty = document.getElementById('today-empty');
+
+    // Flatten all (pill, time) combos and sort by time
+    const rows = [];
+    pills.forEach(p => {
+      (p.times || []).forEach(t => rows.push({ pill: p, time: t }));
+    });
+    rows.sort((a, b) => a.time.localeCompare(b.time));
+
+    if (!rows.length) { todayEmpty.style.display = 'block'; }
+    else { todayEmpty.style.display = 'none'; }
+
+    // Remove old rows
+    Array.from(todayList.querySelectorAll('.today-pill-row')).forEach(r => r.remove());
+
+    rows.forEach(({ pill, time }) => {
+      const takenKey = `taken_${pill.id}_${todayStr}`;
+      const taken = localStorage.getItem(takenKey) === '1';
+      const cls = getTimeBadgeClass(time, taken);
+      const row = document.createElement('div');
+      row.className = 'today-pill-row';
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <span class="today-dot" style="background:${pillColor(pill.id)};"></span>
+          <div>
+            <div style="font-weight:600;font-size:.9rem;${taken ? 'text-decoration:line-through;opacity:.5;' : ''}">${esc(pill.name)}</div>
+            <div style="font-size:.78rem;color:var(--text-muted);">${esc(pill.dosage || '')}${pill.instructions ? ' — ' + esc(pill.instructions) : ''}</div>
+          </div>
+        </div>
+        <span class="time-badge ${cls}">${formatTime(time)}</span>
+      `;
+      todayList.appendChild(row);
+    });
+  }
+
+  function renderStats(todayStr) {
+    const total = pills.reduce((s, p) => s + (p.times || []).length, 0);
+    const taken = pills.filter(p => localStorage.getItem(`taken_${p.id}_${todayStr}`) === '1').length;
+    const statTaken = document.getElementById('stat-taken');
+    const statLabel = document.getElementById('stat-label');
+    const pb = document.getElementById('progress-bar');
+    if (statTaken) statTaken.textContent = taken;
+    if (statLabel) statLabel.textContent = `${taken} of ${total} doses`;
+    if (pb) pb.style.width = total ? `${Math.round((taken / total) * 100)}%` : '0%';
+  }
+
+  // ── Countdown ────────────────────────────────────────────────────
+  function scheduleNextCountdown() {
+    if (tickTimer) clearInterval(tickTimer);
+    const nextBar = document.getElementById('next-bar');
+    const nextPillName = document.getElementById('next-pill-name');
+    const nextCountdown = document.getElementById('next-countdown');
+    if (!nextBar || !nextPillName || !nextCountdown) return;
+
+    function tick() {
+      const now = new Date();
+      let best = null; // { pill, ms }
+      pills.forEach(p => {
+        (p.times || []).forEach(t => {
+          const ms = msUntilTime(t, now);
+          if (ms > 0 && (!best || ms < best.ms)) best = { pill: p, ms };
+        });
+      });
+      if (!best) { nextBar.style.display = 'none'; return; }
+      nextBar.style.display = 'flex';
+      nextPillName.textContent = best.pill.name + (best.pill.dosage ? ' — ' + best.pill.dosage : '');
+      nextCountdown.textContent = formatMs(best.ms);
+    }
+    tick();
+    tickTimer = setInterval(tick, 1000);
+  }
+
+  // ── Notifications ────────────────────────────────────────────────
+  function requestNotifPermission() {
+    if (!('Notification' in window)) { Toast.show('Not Supported', 'Your browser does not support notifications.', 'warning'); return; }
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') {
+        Toast.show('Alerts Enabled', 'You will be notified when it is time for your pills.', 'success');
+        document.getElementById('notif-banner').classList.add('hidden');
+        scheduleNotifications();
+      } else {
+        Toast.show('Permission Denied', 'Enable notifications in your browser settings.', 'warning');
+      }
+    });
+  }
+
+  function scheduleNotifications() {
+    Object.values(notifTimers).forEach(clearTimeout);
+    notifTimers = {};
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const now = new Date();
+    pills.forEach(pill => {
+      (pill.times || []).forEach(t => {
+        const ms = msUntilTime(t, now);
+        if (ms <= 0) return;
+        const key = `${pill.id}_${t}`;
+        notifTimers[key] = setTimeout(() => {
+          new Notification('DoctorTalk — Time for your pill!', {
+            body: `${pill.name}${pill.dosage ? ' (' + pill.dosage + ')' : ''}${pill.instructions ? '\n' + pill.instructions : ''}`,
+            icon: '/static/favicon.ico',
+            tag: key,
+          });
+          // Reschedule for tomorrow
+          delete notifTimers[key];
+          setTimeout(() => scheduleNotifications(), 2000);
+        }, ms);
+      });
+    });
+  }
+
+  // ── Modal ────────────────────────────────────────────────────────
+  function openModal(id = null) {
+    editId = id;
+    document.getElementById('modal-title').innerHTML =
+      `<i class="fas fa-pills me-2" style="color:var(--primary);"></i>${id ? 'Edit Pill' : 'Add Pill'}`;
+
+    const pill = id ? pills.find(p => p.id === id) : null;
+
+    document.getElementById('pill-name-inp').value  = pill?.name  || '';
+    document.getElementById('pill-dose-inp').value  = pill?.dosage || '';
+    document.getElementById('pill-color-inp').value = pill?.colour || '';
+    document.getElementById('pill-note-inp').value  = pill?.instructions || '';
+    document.getElementById('pill-start-inp').value = pill?.startDate || toDateStr(new Date());
+
+    // Rebuild times list
+    const tl = document.getElementById('times-list');
+    tl.innerHTML = '';
+    const times = pill?.times?.length ? pill.times : ['08:00'];
+    times.forEach(t => addTimeRow(t));
+
+    document.getElementById('pill-modal').classList.add('open');
+    document.getElementById('pill-name-inp').focus();
+  }
+
+  function closeModal(evt) {
+    if (evt && evt.target !== document.getElementById('pill-modal')) return;
+    document.getElementById('pill-modal').classList.remove('open');
+  }
+
+  function addTimeRow(val = '') {
+    const tl = document.getElementById('times-list');
+    const row = document.createElement('div');
+    row.style = 'display:flex;gap:.5rem;align-items:center;';
+    row.innerHTML = `
+      <input type="time" class="form-control time-row-inp" value="${val}" style="max-width:160px;">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentElement.remove()" title="Remove time"
+              style="color:var(--danger);"><i class="fas fa-times"></i></button>
+    `;
+    tl.appendChild(row);
+  }
+
+  function savePill() {
+    const name = document.getElementById('pill-name-inp').value.trim();
+    if (!name) { Toast.show('Required', 'Please enter a pill name.', 'warning'); return; }
+
+    const times = Array.from(document.querySelectorAll('.time-row-inp'))
+      .map(i => i.value).filter(Boolean).sort();
+    if (!times.length) { Toast.show('Required', 'Please add at least one reminder time.', 'warning'); return; }
+
+    if (editId) {
+      const pill = pills.find(p => p.id === editId);
+      if (pill) {
+        pill.name = name;
+        pill.dosage = document.getElementById('pill-dose-inp').value.trim();
+        pill.colour = document.getElementById('pill-color-inp').value.trim();
+        pill.instructions = document.getElementById('pill-note-inp').value.trim();
+        pill.startDate = document.getElementById('pill-start-inp').value;
+        pill.times = times;
+      }
+    } else {
+      pills.push({
+        id: 'p' + Date.now(),
+        name,
+        dosage: document.getElementById('pill-dose-inp').value.trim(),
+        colour: document.getElementById('pill-color-inp').value.trim(),
+        instructions: document.getElementById('pill-note-inp').value.trim(),
+        startDate: document.getElementById('pill-start-inp').value,
+        times,
+      });
+    }
+
+    save();
+    document.getElementById('pill-modal').classList.remove('open');
+    render();
+    scheduleNotifications();
+    Toast.show('Saved', editId ? 'Pill updated.' : 'Pill added.', 'success');
+  }
+
+  function deletePill(id) {
+    if (!confirm('Remove this pill and its reminders?')) return;
+    pills = pills.filter(p => p.id !== id);
+    save();
+    render();
+    scheduleNotifications();
+    Toast.show('Removed', 'Pill removed.', 'info');
+  }
+
+  // ── Mark taken ───────────────────────────────────────────────────
+  function markTaken(id) {
+    const todayStr = toDateStr(new Date());
+    localStorage.setItem(`taken_${id}_${todayStr}`, '1');
+    render();
+    Toast.show('Great!', 'Marked as taken.', 'success');
+  }
+  function unmarkTaken(id) {
+    const todayStr = toDateStr(new Date());
+    localStorage.removeItem(`taken_${id}_${todayStr}`);
+    render();
+  }
+
+  // ── Search ───────────────────────────────────────────────────────
+  function search(q) { render(q); }
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  function toDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function msUntilTime(timeStr, now) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const t = new Date(now); t.setHours(h, m, 0, 0);
+    return t - now;
+  }
+  function formatMs(ms) {
+    const s = Math.floor(ms / 1000);
+    const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+    return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+  }
+  function formatTime(t) {
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hh = h % 12 || 12;
+    return `${hh}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+  function getTimeBadgeClass(timeStr, taken) {
+    if (taken) return 'past';
+    const now = new Date();
+    const ms = msUntilTime(timeStr, now);
+    if (ms < 0) return 'past';
+    if (ms < 30 * 60 * 1000) return 'upcoming'; // within 30 min
+    return '';
+  }
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  const COLORS = ['#2563eb','#0d9488','#7c3aed','#d97706','#dc2626','#059669','#db2777','#0284c7'];
+  function pillColor(id) { let n=0; for(const c of id) n+=c.charCodeAt(0); return COLORS[n%COLORS.length]; }
+
+  // ── Init ─────────────────────────────────────────────────────────
+  function init() {
+    load();
+    render();
+    scheduleNotifications();
+
+    // Check if notifications already granted → hide banner
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      document.getElementById('notif-banner').classList.add('hidden');
+    }
+
+    // Reset taken status daily (compare stored date)
+    const lastDate = localStorage.getItem('doctortalk_last_date');
+    const todayStr = toDateStr(new Date());
+    if (lastDate !== todayStr) {
+      localStorage.setItem('doctortalk_last_date', todayStr);
+      // taken keys from yesterday are naturally stale; no cleanup needed
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  return { openModal, closeModal, addTimeRow, savePill, deletePill, markTaken, unmarkTaken, search, requestNotifPermission };
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Medication Information{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='medications'</script>
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Medication Information</h1>
+      <p class="page-subtitle">Comprehensive educational drug information powered by IBM watsonx AI.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,#059669,#10b981);">
+      <i class="fas fa-pills"></i>
+    </div>
+  </div>
+
+  <div class="disclaimer-box mb-4">
+    <i class="fas fa-shield-alt"></i>
+    <div>
+      <strong>Important:</strong> Medication information provided here is for educational purposes only.
+      Dosage information is general, not patient-specific. Always follow your healthcare provider's instructions
+      and consult a pharmacist or physician before taking any medication.
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <div style="flex:1;min-width:240px;position:relative;">
+          <i class="fas fa-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+          <input type="text" id="medication-input" class="form-control"
+                 style="padding-left:2.75rem;font-size:1rem;padding-top:.75rem;padding-bottom:.75rem;"
+                 placeholder="Enter medication name (e.g. Metformin, Lisinopril, Atorvastatin…)">
+        </div>
+        <button id="search-medication-btn" class="btn btn-primary" style="padding:.75rem 2rem;">
+          <i class="fas fa-robot me-2"></i>Search with AI
+        </button>
+      </div>
+
+      <!-- Common medications quick search -->
+      <div style="margin-top:1rem;">
+        <div style="font-size:.75rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">Common Medications</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+          {% set meds = ['Metformin','Lisinopril','Atorvastatin','Amlodipine','Omeprazole',
+                         'Levothyroxine','Aspirin','Ibuprofen','Paracetamol','Amoxicillin',
+                         'Ciprofloxacin','Salbutamol','Fluoxetine','Sertraline','Losartan'] %}
+          {% for m in meds %}
+          <button class="prompt-chip" onclick="document.getElementById('medication-input').value='{{ m }}';MedicationInfo.search('{{ m }}')">{{ m }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="medication-result">
+    <div class="card">
+      <div class="card-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:380px;text-align:center;">
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(5,150,105,.1);display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;">
+          <i class="fas fa-pills" style="font-size:2rem;color:var(--success);"></i>
+        </div>
+        <h5 style="font-weight:700;margin-bottom:.75rem;">Search Medication Database</h5>
+        <p style="color:var(--text-muted);max-width:360px;font-size:.9rem;">
+          Enter a medication name above or choose from common medications to get detailed educational information about uses, dosages, side effects, and warnings.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

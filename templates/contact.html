@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock %}
+<script>document.body.dataset.page='contact'</script>
+
+{% block content %}
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Contact Us</h1>
+      <p class="page-subtitle">Have a question or need support? We're here to help.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));">
+      <i class="fas fa-envelope"></i>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Contact Form -->
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-paper-plane" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Send a Message</span>
+        </div>
+        <div class="card-body">
+          <form onsubmit="submitContact(event)">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" placeholder="John Doe" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" placeholder="you@example.com" required>
+              </div>
+            </div>
+            <div class="form-group mt-3">
+              <label class="form-label">Subject</label>
+              <select class="form-control">
+                <option>Technical Support</option>
+                <option>AI Response Quality</option>
+                <option>Feature Request</option>
+                <option>Medical Disclaimer Question</option>
+                <option>Partnership Inquiry</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-control" rows="6" placeholder="Describe your question or issue in detail…" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">
+              <i class="fas fa-paper-plane me-2"></i>Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="col-lg-5">
+      {% set contacts = [
+        ('fa-robot','fa-primary','AI Chat Support','Get instant answers from our AI assistant','/chat','Chat Now →'),
+        ('fa-envelope','var(--secondary)','Email Support','support@doctortalk.example.com','mailto:support@doctortalk.example.com','Send Email →'),
+        ('fa-comment-dots','var(--accent)','Feedback Form','Share your experience and suggestions','/feedback','Leave Feedback →'),
+      ] %}
+      {% for icon, color, title, info, url, cta in contacts %}
+      <div class="card mb-3">
+        <div class="card-body" style="display:flex;align-items:flex-start;gap:1rem;">
+          <div style="width:44px;height:44px;border-radius:12px;background:rgba(37,99,235,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas {{ icon }}" style="color:{% if color == 'fa-primary' %}var(--primary){% else %}{{ color }}{% endif %};font-size:1rem;"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div style="font-weight:700;margin-bottom:.25rem;">{{ title }}</div>
+            <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.625rem;">{{ info }}</div>
+            <a href="{{ url }}" class="btn btn-outline-primary btn-sm">{{ cta }}</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="card" style="background:linear-gradient(135deg,rgba(37,99,235,.04),rgba(13,148,136,.04));border-color:rgba(37,99,235,.15);">
+        <div class="card-body">
+          <h6 style="font-weight:700;color:var(--primary);">
+            <i class="fas fa-shield-alt me-2"></i>Medical Emergency?
+          </h6>
+          <p style="font-size:.875rem;color:var(--text-secondary);margin-top:.5rem;line-height:1.65;">
+            If you are experiencing a medical emergency, <strong>do not contact us</strong>.
+            Call your local emergency services immediately:
+          </p>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--danger);margin-top:.5rem;">📞 911</div>
+          <div style="font-size:.8rem;color:var(--text-muted);">or your local emergency number</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function submitContact(e) {
+  e.preventDefault();
+  Toast.success('Message Sent!', 'We\'ll respond to your inquiry within 24 hours.');
+  e.target.reset();
+}
+</script>
+{% endblock %}

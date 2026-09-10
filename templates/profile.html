@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='profile'</script>
+<div class="page-content">
+
+  <!-- Profile Hero -->
+  <div style="background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:20px;padding:2rem;margin-bottom:2rem;color:white;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;background:rgba(255,255,255,.1);border-radius:50%;"></div>
+    <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;position:relative;z-index:1;">
+      <div id="hero-avatar" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;flex-shrink:0;">U</div>
+      <div>
+        <h2 id="hero-name" style="color:white;margin-bottom:.25rem;">—</h2>
+        <div id="hero-email" style="color:rgba(255,255,255,.7);font-size:.875rem;">—</div>
+        <div style="display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap;">
+          <span style="background:rgba(255,255,255,.15);padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:600;">Free Plan</span>
+          <span id="hero-since" style="background:rgba(255,255,255,.15);padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:600;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Personal Info -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-user" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Personal Information</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="p-name" class="form-control" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="p-email" class="form-control" placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" id="p-phone" class="form-control" placeholder="+91 00000 00000">
+          </div>
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" id="p-dob" class="form-control">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Gender</label>
+              <select id="p-gender" class="form-control">
+                <option value="">Select…</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+                <option>Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary mt-3" onclick="Profile.savePersonal()">
+            <i class="fas fa-save me-2"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Profile -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-heartbeat" style="color:var(--danger);"></i>
+          <span style="font-weight:700;">Health Profile</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label">Height (cm)</label>
+              <input type="number" id="p-height" class="form-control" placeholder="170" min="50" max="280">
+            </div>
+            <div class="col-6">
+              <label class="form-label">Weight (kg)</label>
+              <input type="number" id="p-weight" class="form-control" placeholder="70" min="10" max="500">
+            </div>
+          </div>
+          <div class="form-group mt-3">
+            <label class="form-label">Blood Type</label>
+            <select id="p-blood" class="form-control">
+              <option value="">Unknown</option>
+              {% for bt in ['A+','A-','B+','B-','AB+','AB-','O+','O-'] %}
+              <option>{{ bt }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Known Health Conditions</label>
+            <textarea id="p-conditions" class="form-control" rows="2" placeholder="e.g. Type 2 Diabetes, Hypertension…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Known Allergies</label>
+            <input type="text" id="p-allergies" class="form-control" placeholder="e.g. Penicillin, Shellfish…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Health Goals</label>
+            <input type="text" id="p-goals" class="form-control" placeholder="e.g. Weight loss, better blood sugar control…">
+          </div>
+          <button class="btn btn-secondary mt-2" onclick="Profile.saveHealth()">
+            <i class="fas fa-save me-2"></i>Save Health Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BMI Card (auto-calculated) -->
+    <div class="col-lg-6">
+      <div class="card" id="bmi-card" style="display:none;">
+        <div class="card-header">
+          <i class="fas fa-weight" style="color:var(--secondary);"></i>
+          <span style="font-weight:700;">BMI Calculator</span>
+        </div>
+        <div class="card-body" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div id="bmi-value" style="font-size:2.5rem;font-weight:800;color:var(--primary);">—</div>
+            <div style="font-size:.75rem;color:var(--text-muted);font-weight:600;">BMI</div>
+          </div>
+          <div>
+            <div id="bmi-label" style="font-size:1rem;font-weight:700;"></div>
+            <div style="font-size:.8rem;color:var(--text-muted);margin-top:.25rem;">Based on your saved height &amp; weight</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Wellness Plan -->
+    <div class="col-12">
+      <div class="card" style="background:linear-gradient(135deg,rgba(37,99,235,.04),rgba(13,148,136,.04));border-color:rgba(37,99,235,.15);">
+        <div class="card-header">
+          <i class="fas fa-robot" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Generate AI Wellness Plan</span>
+        </div>
+        <div class="card-body">
+          <p style="color:var(--text-secondary);font-size:.9rem;margin-bottom:1.25rem;">
+            Get a personalized wellness plan generated by IBM watsonx based on your saved health profile.
+          </p>
+          <button class="btn btn-primary" onclick="generateWellnessPlan()">
+            <i class="fas fa-magic me-2"></i>Generate My Wellness Plan
+          </button>
+          <div id="wellness-plan-result" style="margin-top:1.25rem;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Profile — localStorage-backed save/load ──────────────────────
+const Profile = {
+  KEY_PERSONAL: 'medassist-profile-personal',
+  KEY_HEALTH:   'medassist-profile-health',
+
+  load() {
+    // Personal
+    const p = this._get(this.KEY_PERSONAL);
+    this._val('p-name',       p.name    || '');
+    this._val('p-email',      p.email   || '');
+    this._val('p-phone',      p.phone   || '');
+    this._val('p-dob',        p.dob     || '');
+    this._val('p-gender',     p.gender  || '');
+
+    // Health
+    const h = this._get(this.KEY_HEALTH);
+    this._val('p-height',     h.height     || '');
+    this._val('p-weight',     h.weight     || '');
+    this._val('p-blood',      h.blood      || '');
+    this._val('p-conditions', h.conditions || '');
+    this._val('p-allergies',  h.allergies  || '');
+    this._val('p-goals',      h.goals      || '');
+
+    this._updateHero(p);
+    this._updateBMI(h.height, h.weight);
+  },
+
+  savePersonal() {
+    const data = {
+      name:   this._get2('p-name'),
+      email:  this._get2('p-email'),
+      phone:  this._get2('p-phone'),
+      dob:    this._get2('p-dob'),
+      gender: this._get2('p-gender'),
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(this.KEY_PERSONAL, JSON.stringify(data));
+    this._updateHero(data);
+    Toast.show('Saved', 'Personal profile updated successfully.', 'success');
+  },
+
+  saveHealth() {
+    const h = document.getElementById('p-height').value;
+    const w = document.getElementById('p-weight').value;
+    const data = {
+      height:     h,
+      weight:     w,
+      blood:      this._get2('p-blood'),
+      conditions: this._get2('p-conditions'),
+      allergies:  this._get2('p-allergies'),
+      goals:      this._get2('p-goals'),
+      savedAt:    new Date().toISOString(),
+    };
+    localStorage.setItem(this.KEY_HEALTH, JSON.stringify(data));
+    this._updateBMI(h, w);
+    Toast.show('Saved', 'Health profile updated successfully.', 'success');
+  },
+
+  _updateHero(p) {
+    const name  = p.name  || '—';
+    const email = p.email || '—';
+    const initial = (p.name || 'U').trim()[0].toUpperCase();
+    const el = {
+      name:   document.getElementById('hero-name'),
+      email:  document.getElementById('hero-email'),
+      avatar: document.getElementById('hero-avatar'),
+      since:  document.getElementById('hero-since'),
+    };
+    if (el.name)   el.name.textContent  = name;
+    if (el.email)  el.email.textContent = email;
+    if (el.avatar) el.avatar.textContent = initial;
+
+    // Also update topbar avatar initial
+    const avatarBtn = document.querySelector('.avatar-btn');
+    if (avatarBtn) avatarBtn.textContent = initial;
+
+    // Member since
+    if (el.since && p.savedAt) {
+      const d = new Date(p.savedAt);
+      el.since.textContent = 'Updated ' + d.toLocaleDateString('en-IN', { month:'short', year:'numeric' });
+    }
+  },
+
+  _updateBMI(h, w) {
+    const card = document.getElementById('bmi-card');
+    const valEl = document.getElementById('bmi-value');
+    const lblEl = document.getElementById('bmi-label');
+    if (!card || !h || !w) { if (card) card.style.display = 'none'; return; }
+    const bmi = (parseFloat(w) / Math.pow(parseFloat(h) / 100, 2)).toFixed(1);
+    if (isNaN(bmi)) { card.style.display = 'none'; return; }
+    card.style.display = '';
+    valEl.textContent = bmi;
+    const cat =
+      bmi < 18.5 ? { label:'Underweight', color:'#f59e0b' } :
+      bmi < 25   ? { label:'Normal weight', color:'#10b981' } :
+      bmi < 30   ? { label:'Overweight', color:'#f59e0b' } :
+                   { label:'Obese', color:'#ef4444' };
+    valEl.style.color = cat.color;
+    lblEl.textContent = cat.label;
+    lblEl.style.color  = cat.color;
+  },
+
+  _get(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+  },
+  _val(id, v) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.value = v;
+    else if (el.tagName === 'TEXTAREA') el.value = v;
+    else el.value = v;
+  },
+  _get2(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  },
+};
+
+// Load profile on page ready
+document.addEventListener('DOMContentLoaded', () => Profile.load());
+
+// ── Wellness Plan — uses actual saved health data ─────────────────
+async function generateWellnessPlan() {
+  const h = Profile._get(Profile.KEY_HEALTH);
+  const p = Profile._get(Profile.KEY_PERSONAL);
+
+  // Calculate age from DOB if available
+  let age = '';
+  if (p.dob) {
+    const diff = Date.now() - new Date(p.dob).getTime();
+    age = Math.floor(diff / (365.25 * 24 * 3600 * 1000)).toString();
+  }
+
+  Loader.show('wellness-plan-result');
+  try {
+    const data = await API.wellnessPlan({
+      age:        age || 'unknown',
+      gender:     p.gender  || 'unknown',
+      conditions: h.conditions || 'none',
+      goals:      h.goals      || 'general wellness',
+    });
+    renderAIResult('wellness-plan-result', data.plan, 'Your Personalized Wellness Plan');
+  } catch (err) {
+    Loader.renderResult('wellness-plan-result', `<div class="alert alert-danger">Error: ${err.message}</div>`);
+  }
+}
+</script>
+{% endblock %}

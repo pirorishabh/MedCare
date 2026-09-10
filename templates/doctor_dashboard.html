@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block content %}<div class="page-content">
+<div class="page-header"><div><h1 class="page-title">Doctor Dashboard</h1><p class="page-subtitle">Manage your appointment queue, patient reports and video consultations.</p></div><div class="page-header-icon"><i class="fas fa-user-md"></i></div></div>
+<div class="row g-4">
+<div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted">Waiting / Requested</div><div id="requested-count" style="font-size:2.4rem;font-weight:800">—</div></div></div></div>
+<div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted">Confirmed Today</div><div id="confirmed-count" style="font-size:2.4rem;font-weight:800">—</div></div></div></div>
+<div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted">Total Queue</div><div id="total-count" style="font-size:2.4rem;font-weight:800">—</div></div></div></div>
+<div class="col-lg-8"><div class="card"><div class="card-header"><i class="fas fa-users"></i><b>Appointment Queue</b><button class="btn btn-ghost btn-sm ms-auto" onclick="loadDoctorQueue()">Refresh</button></div><div class="card-body" id="doctor-queue">Loading…</div></div></div>
+<div class="col-lg-4"><div class="card"><div class="card-header"><i class="fas fa-file-medical"></i><b>Recent Patient Reports</b><a href="/doctor/reports" class="btn btn-ghost btn-sm ms-auto">View all</a></div><div class="card-body" id="doctor-reports">Loading…</div></div></div>
+</div></div>{% endblock %}
+{% block extra_js %}<script>
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+async function loadDoctorQueue(){
+ try{const r=await fetch('/api/doctor/appointments',{credentials:'same-origin'});const d=await r.json();if(!r.ok)throw Error(d.message||'Could not load appointments');const a=d.appointments||[];
+ document.getElementById('requested-count').textContent=a.filter(x=>x.status==='requested').length;document.getElementById('confirmed-count').textContent=a.filter(x=>['confirmed','in_progress'].includes(x.status)).length;document.getElementById('total-count').textContent=a.length;
+ document.getElementById('doctor-queue').innerHTML=a.length?a.map(x=>`<div class="appointment-card mb-3"><div class="flex-grow-1"><b>${esc(x.patient_name)}</b><div class="small text-muted">${esc(x.title)} · ${esc(x.appointment_time)}</div><div class="small text-muted">${esc(x.patient_email||'')}</div><div class="small text-muted">Status: ${esc(x.status)}</div></div><div class="ms-2 d-flex gap-1 flex-wrap">${x.status==='requested'?`<button class="btn btn-sm btn-primary" onclick="updateAppt(${x.id},'confirmed')">Accept</button>`:''}${['confirmed','in_progress'].includes(x.status)?`<a class="btn btn-sm btn-success" href="/video/${encodeURIComponent(x.room_id)}"><i class="fas fa-video me-1"></i>Video Call</a>`:''}${x.status==='confirmed'?`<button class="btn btn-sm btn-ghost" onclick="updateAppt(${x.id},'in_progress')">Start</button>`:''}${x.status==='in_progress'?`<button class="btn btn-sm btn-ghost" onclick="updateAppt(${x.id},'completed')">Complete</button>`:''}</div></div>`).join(''):'No appointments in the queue.';
+ }catch(e){document.getElementById('doctor-queue').innerHTML='<div class="text-danger">'+esc(e.message)+'</div>';}}
+async function updateAppt(id,status){const r=await fetch('/api/doctor/appointments/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status})});if(!r.ok){const d=await r.json();Toast.error('Update failed',d.message||'Could not update');return}loadDoctorQueue();}
+async function loadDoctorReports(){try{const r=await fetch('/api/doctor/reports',{credentials:'same-origin'});const d=await r.json();const a=d.reports||[];document.getElementById('doctor-reports').innerHTML=a.slice(0,6).map(x=>`<div style="padding:.65rem 0;border-bottom:1px solid var(--border-light)"><b>${esc(x.patient_name)}</b><div class="small text-muted">${esc(x.filename)} · ${esc(x.created_at)}</div><div class="small text-muted">${esc(x.status)}</div></div>`).join('')||'No reports available.'}catch(e){document.getElementById('doctor-reports').textContent='Could not load reports.'}}
+loadDoctorQueue();loadDoctorReports();setInterval(loadDoctorQueue,15000);
+</script>{% endblock %}

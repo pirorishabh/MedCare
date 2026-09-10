@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+<script>document.body.dataset.page='feedback'</script>
+
+{% block content %}
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Share Your Feedback</h1>
+      <p class="page-subtitle">Help us improve DoctorTalk for everyone.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,var(--secondary),var(--secondary-light));">
+      <i class="fas fa-comment-dots"></i>
+    </div>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-star" style="color:var(--warning);"></i>
+          <span style="font-weight:700;">Rate Your Experience</span>
+        </div>
+        <div class="card-body">
+
+          <!-- Star rating -->
+          <div style="margin-bottom:1.5rem;text-align:center;">
+            <div style="font-weight:600;margin-bottom:.875rem;">How would you rate DoctorTalk?</div>
+            <div id="star-rating" style="display:flex;gap:.5rem;justify-content:center;font-size:2.5rem;">
+              {% for i in range(1,6) %}
+              <span style="cursor:pointer;color:var(--border-color);transition:color .2s;"
+                    onmouseover="hoverStars({{ i }})" onmouseout="resetStars()"
+                    onclick="selectStars({{ i }})">★</span>
+              {% endfor %}
+            </div>
+            <div id="star-label" style="font-size:.85rem;color:var(--text-muted);margin-top:.5rem;">Click to rate</div>
+          </div>
+
+          <form onsubmit="submitFeedback(event)">
+            <div class="form-group">
+              <label class="form-label">What do you like most?</label>
+              <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;">
+                {% for tag in ['AI Responses','UI Design','Symptom Checker','Disease Info','Ease of Use','Dark Mode','Speed','Accuracy'] %}
+                <button type="button" class="prompt-chip" onclick="this.style.background='rgba(37,99,235,.12)';this.style.borderColor='var(--primary)';">{{ tag }}</button>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Your Feedback</label>
+              <textarea class="form-control" rows="5" placeholder="Tell us what you love, what could be improved, or any feature requests…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-control">
+                <option>General Feedback</option>
+                <option>Bug Report</option>
+                <option>Feature Request</option>
+                <option>AI Quality</option>
+                <option>UI/UX Improvement</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">
+              <i class="fas fa-paper-plane me-2"></i>Submit Feedback
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-body" style="text-align:center;padding:2rem;">
+          <i class="fas fa-heart" style="font-size:2.5rem;color:var(--danger);margin-bottom:1rem;display:block;"></i>
+          <h6 style="font-weight:800;">We Value Your Input</h6>
+          <p style="font-size:.875rem;color:var(--text-muted);line-height:1.7;">
+            Every piece of feedback helps us improve the AI responses, user experience, and health features to better serve you and the wider community.
+          </p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-question-circle" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Other Ways to Help</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:.75rem;">
+            <a href="/contact" style="display:flex;align-items:center;gap:.75rem;padding:.625rem;background:var(--bg-tertiary);border-radius:10px;text-decoration:none;color:var(--text-primary);transition:.2s;" onmouseover="this.style.background='var(--border-color)'" onmouseout="this.style.background='var(--bg-tertiary)'">
+              <i class="fas fa-envelope" style="color:var(--primary);width:18px;"></i>
+              <span style="font-size:.875rem;font-weight:500;">Contact Support</span>
+            </a>
+            <a href="/about" style="display:flex;align-items:center;gap:.75rem;padding:.625rem;background:var(--bg-tertiary);border-radius:10px;text-decoration:none;color:var(--text-primary);transition:.2s;" onmouseover="this.style.background='var(--border-color)'" onmouseout="this.style.background='var(--bg-tertiary)'">
+              <i class="fas fa-info-circle" style="color:var(--secondary);width:18px;"></i>
+              <span style="font-size:.875rem;font-weight:500;">Learn About Us</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedStars = 0;
+const labels = ['','Poor','Fair','Good','Very Good','Excellent'];
+function hoverStars(n) {
+  document.querySelectorAll('#star-rating span').forEach((s,i) => {
+    s.style.color = i < n ? '#f59e0b' : 'var(--border-color)';
+  });
+  document.getElementById('star-label').textContent = labels[n];
+}
+function resetStars() {
+  document.querySelectorAll('#star-rating span').forEach((s,i) => {
+    s.style.color = i < selectedStars ? '#f59e0b' : 'var(--border-color)';
+  });
+  document.getElementById('star-label').textContent = selectedStars ? labels[selectedStars] : 'Click to rate';
+}
+function selectStars(n) {
+  selectedStars = n;
+  document.getElementById('star-label').textContent = '★'.repeat(n) + ' — ' + labels[n];
+}
+function submitFeedback(e) {
+  e.preventDefault();
+  Toast.success('Thank You!', 'Your feedback has been submitted successfully.');
+  e.target.reset(); selectedStars = 0; resetStars();
+}
+</script>
+{% endblock %}

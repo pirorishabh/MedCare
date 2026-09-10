@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+<script>document.body.dataset.page='about'</script>
+
+{% block content %}
+<div class="page-content">
+
+  <!-- Hero -->
+  <div style="background:linear-gradient(135deg,#0f172a,#1e3a5f,#0d4a47);border-radius:20px;padding:3rem 2.5rem;margin-bottom:2rem;color:white;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(37,99,235,.2);border-radius:50%;filter:blur(40px);"></div>
+    <div style="position:absolute;bottom:-40px;left:-40px;width:150px;height:150px;background:rgba(13,148,136,.2);border-radius:50%;filter:blur(40px);"></div>
+    <div style="position:relative;z-index:1;">
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,#2563eb,#0d9488);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;">❤️</div>
+        <div>
+          <h1 style="font-size:2rem;font-weight:900;color:white;margin-bottom:.25rem;">{{ app_name }}</h1>
+          <div style="color:rgba(255,255,255,.6);font-size:.9rem;">Version {{ app_version }} · Powered by IBM watsonx Orchestrate</div>
+        </div>
+      </div>
+      <p style="color:rgba(255,255,255,.75);font-size:1.05rem;max-width:640px;line-height:1.7;">
+        An enterprise-grade AI Medical Assistant that democratizes access to evidence-based health education.
+        Built on IBM watsonx Orchestrate's powerful AI foundation, DoctorTalk provides personalized health
+        guidance, symptom analysis, disease information, and wellness plans to empower better healthcare decisions.
+      </p>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem;">
+        <a href="/chat" class="btn btn-primary"><i class="fas fa-robot me-2"></i>Try AI Chat</a>
+        <a href="/dashboard" class="btn btn-ghost" style="color:white;border-color:rgba(255,255,255,.3);">View Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Mission -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="fas fa-bullseye" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Our Mission</span>
+        </div>
+        <div class="card-body">
+          <p style="color:var(--text-secondary);line-height:1.75;">
+            To bridge the gap between complex medical knowledge and everyday understanding by providing
+            accessible, accurate, and safe AI-powered health education to everyone.
+          </p>
+          <p style="color:var(--text-secondary);line-height:1.75;margin-top:.75rem;">
+            We believe that informed patients make better healthcare decisions. Our AI assistant
+            empowers individuals with the knowledge they need — while always recommending professional consultation.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technology -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="fas fa-microchip" style="color:var(--secondary);"></i>
+          <span style="font-weight:700;">Technology Stack</span>
+        </div>
+        <div class="card-body">
+          {% set tech = [
+            ('IBM watsonx Orchestrate','Enterprise AI language model and orchestration','fa-brain','primary'),
+            ('Python Flask','Lightweight, powerful web framework backend','fa-python','success'),
+            ('Bootstrap 5','Responsive, mobile-first frontend framework','fa-mobile-alt','warning'),
+            ('HTML5 / CSS3 / JS','Modern web standards with glassmorphism UI','fa-code','secondary'),
+          ] %}
+          {% for name, desc, icon, color in tech %}
+          <div style="display:flex;align-items:center;gap:.875rem;padding:.75rem 0;border-bottom:1px solid var(--border-light);">
+            <div style="width:40px;height:40px;border-radius:10px;background:rgba(37,99,235,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fas {{ icon }}" style="color:var(--{{ color }});font-size:.95rem;"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:.875rem;">{{ name }}</div>
+              <div style="font-size:.78rem;color:var(--text-muted);">{{ desc }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Features list -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-list-check" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Platform Features</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% set feat_list = [
+              ('AI Chat Assistant','IBM watsonx-powered conversational health education'),
+              ('Symptom Checker','Multi-symptom analysis with specialist recommendations'),
+              ('Disease Library','Comprehensive information on hundreds of conditions'),
+              ('Medication Database','Drug information including side effects and interactions'),
+              ('Report Analysis','AI explanation of PDF/DOCX medical documents'),
+              ('Health Dashboard','Holistic health tracking and goal management'),
+              ('Health Timeline','Chronological health history management'),
+              ('Appointment Manager','Healthcare appointment scheduling and reminders'),
+              ('Voice Interface','Speech-to-text input and text-to-speech output'),
+              ('Dark Mode','Beautiful light and dark theme switching'),
+              ('Chat Export','Download conversation history as text files'),
+              ('Wellness Plans','AI-generated personalized wellness recommendations'),
+              ('BMI Calculator','Instant body mass index calculation and classification'),
+              ('Responsive Design','Optimized for desktop, tablet, and mobile'),
+            ] %}
+            {% for title, desc in feat_list %}
+            <div class="col-md-6 col-lg-4">
+              <div style="display:flex;align-items:flex-start;gap:.625rem;padding:.625rem;background:var(--bg-tertiary);border-radius:10px;">
+                <i class="fas fa-check-circle" style="color:var(--success);font-size:.9rem;margin-top:2px;flex-shrink:0;"></i>
+                <div>
+                  <div style="font-weight:600;font-size:.85rem;">{{ title }}</div>
+                  <div style="font-size:.78rem;color:var(--text-muted);">{{ desc }}</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical Disclaimer -->
+    <div class="col-12">
+      <div style="background:rgba(245,158,11,.06);border:1.5px solid rgba(245,158,11,.25);border-radius:16px;padding:2rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+          <i class="fas fa-shield-alt" style="font-size:1.5rem;color:var(--warning);"></i>
+          <h5 style="font-weight:800;margin:0;color:var(--warning);">Important Medical Disclaimer</h5>
+        </div>
+        <p style="color:var(--text-secondary);line-height:1.75;margin-bottom:.75rem;">
+          <strong>{{ app_name }} is an educational health information platform only.</strong>
+          It does not provide medical advice, diagnoses, or treatment recommendations for specific individuals.
+        </p>
+        <ul style="color:var(--text-secondary);font-size:.9rem;line-height:1.8;padding-left:1.25rem;">
+          <li>All content is for general educational purposes only</li>
+          <li>Always consult qualified healthcare professionals for personal medical decisions</li>
+          <li>In emergencies, call your local emergency services immediately (911 or equivalent)</li>
+          <li>Never disregard professional medical advice based on information from this platform</li>
+          <li>Individual health conditions vary — AI-generated information may not apply to your situation</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

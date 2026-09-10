@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}AI Chat Assistant{% endblock %}
+
+{% block extra_css %}
+<style>
+.page-content { padding: 0 !important; }
+.main-content { overflow: hidden; }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='chat'</script>
+<div class="chat-layout">
+
+  <!-- ── Chat Sidebar (history) ──────────────────────────────────────────── -->
+  <aside class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <button onclick="Chat.clearChat()" class="btn btn-ghost btn-sm w-full">
+        <i class="fas fa-plus me-2"></i>New Chat
+      </button>
+      <div style="position:relative;margin-top:.75rem;">
+        <i class="fas fa-search" style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.8rem;"></i>
+        <input type="text" class="form-control" placeholder="Search chats…"
+               style="padding-left:2.25rem;font-size:.8rem;" id="chat-search">
+      </div>
+    </div>
+
+    <div style="padding:.75rem;flex:1;overflow-y:auto;">
+      <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:.5rem .25rem .375rem;">Today</div>
+
+      {% set history_items = [
+        ('Diabetes management tips','fa-circle',1),
+        ('What is hypertension?','fa-circle',2),
+        ('Metformin side effects','fa-circle',3),
+        ('Understanding CBC results','fa-circle',4),
+        ('Heart-healthy diet plan','fa-circle',5),
+      ] %}
+      {% for title, icon, idx in history_items %}
+      <div class="chat-history-item {% if idx==1 %}active{% endif %}">
+        <i class="fas fa-comment-dots" style="color:var(--text-muted);font-size:.8rem;flex-shrink:0;"></i>
+        <span class="chat-history-title">{{ title }}</span>
+        <i class="fas fa-ellipsis-h" style="color:var(--text-muted);font-size:.75rem;flex-shrink:0;opacity:0;" class="chat-history-menu"></i>
+      </div>
+      {% endfor %}
+
+      <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:.75rem .25rem .375rem;">Yesterday</div>
+      {% for title, icon, idx in [('Sleep hygiene guide','fa-circle',6),('Asthma medications','fa-circle',7)] %}
+      <div class="chat-history-item">
+        <i class="fas fa-comment-dots" style="color:var(--text-muted);font-size:.8rem;flex-shrink:0;"></i>
+        <span class="chat-history-title">{{ title }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Chat actions -->
+    <div style="padding:.75rem;border-top:1px solid var(--border-color);display:flex;gap:.5rem;">
+      <button onclick="Chat.exportChat()" class="btn btn-ghost btn-sm flex-grow-1"><i class="fas fa-download me-1"></i>Export TXT</button><button onclick="Chat.exportPDF()" class="btn btn-ghost btn-sm" title="Save PDF"><i class="fas fa-file-pdf"></i></button>
+      <button onclick="Chat.clearChat()" class="btn btn-ghost btn-sm btn-icon" title="Clear all">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main Chat Area ──────────────────────────────────────────────────── -->
+  <main class="chat-main">
+    <!-- Chat header -->
+    <div style="padding:.875rem 1.5rem;border-bottom:1px solid var(--border-color);background:var(--bg-card);display:flex;align-items:center;gap:.75rem;">
+      <div class="message-avatar ai" style="width:36px;height:36px;flex-shrink:0;">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.9rem;">DoctorTalk</div>
+        <div style="font-size:.75rem;color:var(--success);display:flex;align-items:center;gap:.35rem;">
+          <i class="fas fa-circle" style="font-size:.5rem;"></i> Powered by IBM watsonx
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="Chat.exportChat()" class="topbar-btn" title="Export chat">
+          <i class="fas fa-download"></i>
+        </button>
+        <button onclick="Chat.clearChat()" class="topbar-btn" title="Clear chat">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+        <button onclick="Theme.toggle()" class="topbar-btn" title="Toggle theme">
+          <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+      <!-- Typing indicator (hidden by default) -->
+      <div class="message-wrap ai" id="typing-indicator" style="display:none;">
+        <div class="message-avatar ai"><i class="fas fa-robot"></i></div>
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested prompts -->
+    <div id="suggested-prompts-bar" style="padding:.5rem 1.5rem 0;background:var(--bg-card);border-top:1px solid var(--border-color);">
+      <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:500;">Suggested prompts:</div>
+      <div class="suggested-prompts">
+        {% set prompts = [
+          'What are the symptoms of diabetes?',
+          'Explain hypertension and its treatments',
+          'What is a normal blood pressure range?',
+          'How to improve sleep quality?',
+          'What does creatinine in blood test mean?',
+          'Recommend a heart-healthy diet plan',
+          'What are the side effects of metformin?',
+        ] %}
+        {% for prompt in prompts %}
+        <button class="prompt-chip" onclick="Chat.inputEl.value=this.innerText;Chat.send()">{{ prompt }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <button class="topbar-btn" onclick="Chat.startVoiceInput()" title="Voice message" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;"><i class="fas fa-microphone" style="font-size:.875rem;"></i></button><button class="topbar-btn" onclick="Chat.stopVoiceInput()" title="Stop voice" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;"><i class="fas fa-stop" style="font-size:.75rem;"></i></button><span id="voice-status" style="font-size:.72rem;color:var(--text-muted);min-width:70px"></span>
+        <textarea class="chat-input" id="chat-input" rows="1"
+          placeholder="Ask a health question… (Enter to send, Shift+Enter for new line)"></textarea>
+        <button class="chat-send-btn" id="chat-send" title="Send">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <p style="font-size:.7rem;color:var(--text-muted);text-align:center;margin-top:.5rem;">
+        <i class="fas fa-shield-alt" style="color:var(--warning);"></i>
+        For educational purposes only. Not a substitute for professional medical advice.
+      </p>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Hide suggested prompts once chat starts
+  const observer = new MutationObserver(() => {
+    const msgs = document.querySelectorAll('.message-wrap:not(#typing-indicator)');
+    if (msgs.length > 1) {
+      const bar = document.getElementById('suggested-prompts-bar');
+      if (bar) bar.style.display = 'none';
+    }
+  });
+  observer.observe(document.getElementById('chat-messages'), { childList: true });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  .main-content { margin-left: 0 !important; padding-top: 0 !important; }
+  #sidebar, #topbar { display: none !important; }
+  .auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0d4a47 100%);
+    display: flex; align-items: center; justify-content: center; padding: 2rem;
+  }
+  .auth-card {
+    width: 100%; max-width: 480px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px; padding: 2.5rem;
+  }
+  .auth-input {
+    width: 100%; padding: .75rem 1rem;
+    background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 12px; color: white; font-size: .9rem;
+  }
+  .auth-input::placeholder { color: rgba(255,255,255,0.4); }
+  .auth-input:focus { outline: none; border-color: rgba(59,130,246,0.7); }
+  .auth-label { color: rgba(255,255,255,0.8); font-size: .875rem; font-weight: 600; margin-bottom: .375rem; display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#2563eb,#0d9488);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto .875rem;">❤️</div>
+      <div style="font-size:1.375rem;font-weight:800;color:white;">Create Your Account</div>
+      <div style="color:rgba(255,255,255,.5);font-size:.875rem;margin-top:.25rem;">Join DoctorTalk — Free forever</div>
+    </div>
+
+    <form onsubmit="handleRegister(event)">
+      <div class="row" style="gap:0;">
+        <div class="col-6">
+          <div class="form-group">
+            <label class="auth-label">First Name</label>
+            <input type="text" class="auth-input" placeholder="John" required>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="form-group">
+            <label class="auth-label">Last Name</label>
+            <input type="text" class="auth-input" placeholder="Doe" required>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="auth-label">Email Address</label>
+        <input type="email" id="reg-email" class="auth-input" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="auth-label">Date of Birth</label>
+        <input type="date" class="auth-input" required>
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="auth-label">Password</label>
+        <input type="password" class="auth-input" placeholder="At least 8 characters" required minlength="8">
+      </div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="auth-label">Confirm Password</label>
+        <input type="password" class="auth-input" placeholder="Repeat your password" required>
+      </div>
+
+      <div style="margin:1.25rem 0;">
+        <label style="display:flex;align-items:flex-start;gap:.625rem;cursor:pointer;">
+          <input type="checkbox" required style="width:16px;height:16px;cursor:pointer;margin-top:2px;flex-shrink:0;">
+          <span style="color:rgba(255,255,255,.6);font-size:.8rem;line-height:1.5;">
+            I agree to the Terms of Service and understand that DoctorTalk provides educational health information only — not medical advice.
+          </span>
+        </label>
+      </div>
+
+      <button type="submit" style="width:100%;padding:.875rem;background:linear-gradient(135deg,#0d9488,#14b8a6);border:none;border-radius:12px;color:white;font-weight:700;font-size:1rem;cursor:pointer;transition:all .25s;">
+        Create Account
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:1.5rem;color:rgba(255,255,255,.5);font-size:.875rem;">
+      Already have an account?
+      <a href="/login" style="color:#60a5fa;font-weight:600;">Sign in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function handleRegister(e) {
+  e.preventDefault();
+  const inputs=e.target.querySelectorAll('input');
+  const first=inputs[0].value.trim(), last=inputs[1].value.trim(), email=inputs[2].value.trim();
+  const dob=inputs[3].value, password=inputs[4].value, confirm=inputs[5].value;
+  if(password!==confirm){ Toast.show('Registration failed','Passwords do not match.','error'); return; }
+  try {
+    const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({first_name:first,last_name:last,email,date_of_birth:dob,password})});
+    const data=await res.json();
+    if(!res.ok || data.success === false) throw new Error(data.error || data.message || 'Registration failed.');
+    Toast.show('Account Created!','Please sign in to continue.','success');
+    setTimeout(()=>window.location.href='/login',700);
+  } catch(err) { Toast.show('Registration failed',err.message,'error'); }
+}
+</script>
+{% endblock %}

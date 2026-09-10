@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+
+{% block extra_css %}
+<style>
+  .main-content { margin-left: 0 !important; padding-top: 0 !important; }
+  #sidebar, #topbar { display: none !important; }
+  .auth-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0d4a47 100%);
+    display: flex; align-items: center; justify-content: center; padding: 2rem;
+  }
+  .auth-card {
+    width: 100%; max-width: 440px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 2.5rem;
+  }
+  .auth-input {
+    width: 100%; padding: .75rem 1rem;
+    background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 12px; color: white; font-size: .9rem;
+  }
+  .auth-input::placeholder { color: rgba(255,255,255,0.4); }
+  .auth-input:focus { outline: none; border-color: rgba(59,130,246,0.7); background: rgba(255,255,255,0.12); }
+  .auth-label { color: rgba(255,255,255,0.8); font-size: .875rem; font-weight: 600; margin-bottom: .375rem; display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <!-- Brand -->
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#2563eb,#0d9488);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto .875rem;">❤️</div>
+      <div style="font-size:1.375rem;font-weight:800;color:white;">Welcome back</div>
+      <div style="color:rgba(255,255,255,.5);font-size:.875rem;margin-top:.25rem;">Sign in to your DoctorTalk account</div>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)" novalidate>
+      <div class="form-group">
+        <label class="auth-label" for="login-email">Email Address</label>
+        <input type="email" id="login-email" class="auth-input" placeholder="you@example.com" required autocomplete="username">
+      </div>
+      <div id="login-email-err" style="color:#f87171;font-size:.8rem;margin-top:.25rem;display:none;">Please enter a valid email address.</div>
+      <div class="form-group" style="margin-top:1rem;">
+        <label class="auth-label" for="login-password">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="login-password" class="auth-input" placeholder="Enter your password" required autocomplete="current-password">
+          <button type="button" onclick="togglePassword('login-password')"
+            style="position:absolute;right:.875rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;">
+            <i class="fas fa-eye" id="login-pw-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div id="login-pw-err" style="color:#f87171;font-size:.8rem;margin-top:.25rem;display:none;">Please enter your password.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:.75rem 0 1.25rem;">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;">
+          <input type="checkbox" id="login-remember" style="width:14px;height:14px;cursor:pointer;">
+          <span style="color:rgba(255,255,255,.6);font-size:.8rem;">Remember me</span>
+        </label>
+        <a href="#" style="color:#60a5fa;font-size:.8rem;text-decoration:none;">Forgot password?</a>
+      </div>
+      <button type="submit" id="login-btn" style="width:100%;padding:.875rem;background:linear-gradient(135deg,#2563eb,#3b82f6);border:none;border-radius:12px;color:white;font-weight:700;font-size:1rem;cursor:pointer;transition:all .25s;">
+        Sign In
+      </button>
+    </form>
+
+    <div style="position:relative;margin:1.5rem 0;text-align:center;">
+      <div style="border-top:1px solid rgba(255,255,255,.1);"></div>
+      <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:rgba(15,23,42,.8);padding:0 .875rem;color:rgba(255,255,255,.4);font-size:.8rem;">or continue with</span>
+    </div>
+
+    <p style="text-align:center;margin-top:1rem;color:rgba(255,255,255,.5);font-size:.82rem;">Are you a doctor? <a href="/doctor/login" style="color:#60a5fa;font-weight:600;">Open Doctor Portal</a></p>
+
+    <p style="text-align:center;margin-top:1.5rem;color:rgba(255,255,255,.5);font-size:.875rem;">
+      Don't have an account?
+      <a href="/register" style="color:#60a5fa;font-weight:600;">Sign up free</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function handleLogin(e) {
+  e.preventDefault();
+  const emailEl = document.getElementById('login-email');
+  const pwEl = document.getElementById('login-password');
+  const emailErr = document.getElementById('login-email-err');
+  const pwErr = document.getElementById('login-pw-err');
+  if (!emailEl.value.trim() || !emailEl.validity.valid) { emailErr.style.display='block'; return; }
+  emailErr.style.display='none';
+  if (!pwEl.value.trim()) { pwErr.style.display='block'; return; }
+  pwErr.style.display='none';
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin me-2"></i>Signing in…';
+  try {
+    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:emailEl.value.trim(),password:pwEl.value})});
+    const data=await res.json();
+    if (!res.ok || data.success === false) throw new Error(data.error || data.message || 'Invalid email or password.');
+    window.location.href = new URLSearchParams(window.location.search).get('next') || '/dashboard';
+  } catch(err) {
+    btn.disabled=false; btn.textContent='Sign In';
+    Toast.show('Login failed', err.message, 'error');
+  }
+}
+
+function togglePassword(id) {
+  const el=document.getElementById(id), eye=document.getElementById('login-pw-eye');
+  el.type=el.type==='password'?'text':'password';
+  if(eye) eye.className=el.type==='password'?'fas fa-eye':'fas fa-eye-slash';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+{% block title %}Health Dashboard{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='dashboard'</script>
+<div class="page-content">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Health Dashboard</h1>
+      <p class="page-subtitle">Welcome back! Here's your health overview for today.</p>
+    </div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="/chat" class="btn btn-primary btn-sm"><i class="fas fa-robot"></i> Ask AI</a>
+      <a href="/appointments" class="btn btn-outline-primary btn-sm"><i class="fas fa-calendar-plus"></i> Add Appointment</a>
+    </div>
+  </div>
+
+  <!-- ── Stats Row ───────────────────────────────────────────────────────── -->
+  <div class="row g-3 mb-4 stagger">
+    {% set stats = [
+      ('Health Score','92','fa-heart','card-gradient-blue','↑ 3 pts this week','up'),
+      ('Steps Today','8,420','fa-walking','card-gradient-teal','84% of daily goal','up'),
+      ('Water Intake','6 / 8','fa-tint','card-gradient-green','Glasses consumed','up'),
+      ('Sleep Last Night','7.5 hrs','fa-moon','card-gradient-purple','Good quality sleep','up'),
+    ] %}
+    {% for label, value, icon, gradient, change, direction in stats %}
+    <div class="col-6 col-xl-3 fade-in">
+      <div class="card-stat">
+        <div class="stat-icon {{ gradient }}">
+          <i class="fas {{ icon }}" style="color:white;"></i>
+        </div>
+        <div class="stat-value">{{ value }}</div>
+        <div class="stat-label">{{ label }}</div>
+        <div class="stat-change {{ direction }}">
+          <i class="fas fa-arrow-{{ direction }}"></i> {{ change }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── Daily Health Tip ─────────────────────────────────────────────── -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;">Daily Health Tip</div>
+            <div style="font-size:.75rem;color:var(--text-muted);">Personalized by IBM watsonx AI</div>
+          </div>
+          <button onclick="Dashboard.loadHealthTip()" class="btn btn-ghost btn-sm btn-icon ms-auto" title="Refresh tip">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <div id="health-tip">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text" style="width:80%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BMI Calculator ──────────────────────────────────────────────── -->
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--secondary),var(--secondary-light));display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-weight"></i>
+          </div>
+          <div style="font-weight:700;">BMI Calculator</div>
+        </div>
+        <div class="card-body">
+          <form id="bmi-form">
+            <div class="form-group">
+              <label class="form-label">Weight (kg)</label>
+              <input type="number" id="bmi-weight" class="form-control" placeholder="70" min="20" max="300" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Height (cm)</label>
+              <input type="number" id="bmi-height" class="form-control" placeholder="170" min="100" max="250">
+            </div>
+            <button type="submit" class="btn btn-secondary w-full">Calculate BMI</button>
+          </form>
+          <div id="bmi-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Progress Tracking ───────────────────────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--success),#34d399);display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div style="font-weight:700;">Today's Health Goals</div>
+        </div>
+        <div class="card-body">
+          {% set goals = [
+            ('Steps','8,420 / 10,000',84,'primary'),
+            ('Water Intake','6 / 8 glasses',75,'teal'),
+            ('Calories','1,800 / 2,000',90,'success'),
+            ('Exercise','35 / 45 min',78,'warning'),
+            ('Sleep','7.5 / 8 hrs',94,'purple'),
+          ] %}
+          {% for label, value, percent, color in goals %}
+          <div class="mb-3">
+            <div style="display:flex;justify-content:space-between;margin-bottom:.375rem;">
+              <span style="font-size:.85rem;font-weight:600;">{{ label }}</span>
+              <span style="font-size:.8rem;color:var(--text-muted);">{{ value }}</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill progress-{% if color=='purple' %}teal{% else %}{{ color }}{% endif %}"
+                   data-progress="{{ percent }}" style="width:0%;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Medication Reminders ────────────────────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--danger),#f87171);display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-pills"></i>
+          </div>
+          <div style="font-weight:700;">Medication Reminders</div>
+          <a href="/medications" class="btn btn-ghost btn-sm ms-auto">View All</a>
+        </div>
+        <div class="card-body">
+          {% set meds = [
+            ('Metformin 500mg','8:00 AM','success','Taken'),
+            ('Lisinopril 10mg','12:00 PM','warning','Due soon'),
+            ('Aspirin 81mg','8:00 PM','primary','Upcoming'),
+            ('Vitamin D3 1000IU','8:00 PM','primary','Upcoming'),
+          ] %}
+          {% for name, time, status, label in meds %}
+          <div style="display:flex;align-items:center;gap:.875rem;padding:.625rem 0;border-bottom:1px solid var(--border-light);">
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(var(--bs-{{ status }}-rgb,37,99,235),.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fas fa-capsules" style="color:var(--{{ status }});font-size:.875rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-weight:600;font-size:.875rem;">{{ name }}</div>
+              <div style="font-size:.75rem;color:var(--text-muted);"><i class="far fa-clock me-1"></i>{{ time }}</div>
+            </div>
+            <span class="badge-pill badge-{{ status }}">{{ label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Upcoming Appointments ───────────────────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-light));display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div style="font-weight:700;">Upcoming Appointments</div>
+          <a href="/appointments" class="btn btn-ghost btn-sm ms-auto">Manage</a>
+        </div>
+        <div class="card-body">
+          {% set appts = [
+            (15,'Jan','Dr. Sarah Johnson','Cardiologist','10:30 AM'),
+            (22,'Jan','Dr. Michael Lee','Endocrinologist','2:00 PM'),
+            (5,'Feb','Dr. Emily Chen','General Practice','9:00 AM'),
+          ] %}
+          {% for day, month, doctor, specialty, time in appts %}
+          <div class="appointment-card mb-3">
+            <div class="appt-date-block">
+              <div class="appt-day">{{ day }}</div>
+              <div class="appt-month">{{ month }}</div>
+            </div>
+            <div class="flex-grow-1">
+              <div style="font-weight:700;font-size:.875rem;">{{ doctor }}</div>
+              <div style="font-size:.78rem;color:var(--text-muted);"><i class="fas fa-user-md me-1"></i>{{ specialty }}</div>
+              <div style="font-size:.78rem;color:var(--text-muted);"><i class="far fa-clock me-1"></i>{{ time }}</div>
+            </div>
+            <span class="badge-pill badge-primary" style="flex-shrink:0;">Scheduled</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Health Score ────────────────────────────────────────────────── -->
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:flex;align-items:center;justify-content:center;color:white;font-size:.9rem;flex-shrink:0;">
+            <i class="fas fa-star"></i>
+          </div>
+          <div style="font-weight:700;">Health Score Breakdown</div>
+        </div>
+        <div class="card-body">
+          <div style="text-align:center;margin-bottom:1.5rem;">
+            <div style="font-size:4rem;font-weight:900;background:linear-gradient(135deg,var(--primary),var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">92</div>
+            <div style="font-size:.875rem;color:var(--text-muted);">Overall Health Score</div>
+            <span class="badge-pill badge-success mt-2">Excellent</span>
+          </div>
+          {% set breakdown = [
+            ('Nutrition','88%',88,'success'),
+            ('Exercise','76%',76,'primary'),
+            ('Sleep','94%',94,'secondary'),
+            ('Mental Wellness','90%',90,'warning'),
+          ] %}
+          {% for label, val, pct, color in breakdown %}
+          <div class="mb-2">
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.25rem;">
+              <span style="font-weight:500;">{{ label }}</span><span style="color:var(--text-muted);">{{ val }}</span>
+            </div>
+            <div class="progress-bar-wrap" style="height:6px;">
+              <div class="progress-bar-fill progress-{{ color }}" data-progress="{{ pct }}" style="width:0%;"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Quick Links ─────────────────────────────────────────────────── -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-bolt" style="color:var(--warning);"></i>
+          <span style="font-weight:700;">Quick Actions</span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% set actions = [
+              ('fas fa-robot','card-gradient-blue','AI Chat','Ask a health question','/chat'),
+              ('fas fa-stethoscope','card-gradient-teal','Check Symptoms','Analyze your symptoms','/symptoms'),
+              ('fas fa-book-medical','card-gradient-purple','Disease Info','Look up a condition','/diseases'),
+              ('fas fa-pills','card-gradient-green','Medication Info','Drug information','/medications'),
+              ('fas fa-file-medical-alt','card-gradient-warm','Upload Report','Analyze medical report','/reports'),
+              ('fas fa-history','card-gradient-amber','Health Timeline','View your health history','/timeline'),
+            ] %}
+            {% for icon, gradient, title, desc, url in actions %}
+            <div class="col-6 col-md-4 col-xl-2">
+              <a href="{{ url }}" style="text-decoration:none;">
+                <div style="text-align:center;padding:1.25rem .75rem;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:14px;transition:all .25s;cursor:pointer;" class="card-hover">
+                  <div style="width:48px;height:48px;border-radius:12px;margin:0 auto .75rem;display:flex;align-items:center;justify-content:center;font-size:1.1rem;" class="{{ gradient }}">
+                    <i class="{{ icon }}" style="color:white;"></i>
+                  </div>
+                  <div style="font-weight:700;font-size:.875rem;color:var(--text-primary);margin-bottom:.25rem;">{{ title }}</div>
+                  <div style="font-size:.75rem;color:var(--text-muted);">{{ desc }}</div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end row -->
+</div><!-- end page-content -->
+{% endblock %}

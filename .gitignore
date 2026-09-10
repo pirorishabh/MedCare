@@ -1,0 +1,112 @@
+﻿# ============================================================
+# Environment & Secrets
+# ============================================================
+.env
+*.env
+.env.*
+!env.example
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+MANIFEST
+
+# Unit test / coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+.tox/
+nosetests.xml
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+
+# ============================================================
+# Virtual Environments
+# ============================================================
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================
+# Flask / Application
+# ============================================================
+instance/
+*.log
+medassist.log
+flask_session/
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+
+# ============================================================
+# Databases
+# ============================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================================
+# IDEs & Editors
+# ============================================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Emacs
+*.swp
+*.swo
+*~
+
+# ============================================================
+# OS generated files
+# ============================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Private local database
+medassist.db
+*.db
+.env
+*.db
+medassist.log
+uploads/*
+!uploads/.gitkeep

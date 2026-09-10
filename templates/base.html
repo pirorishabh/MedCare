@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DoctorTalk — Enterprise AI Medical Assistant powered by IBM watsonx">
+  <title>{% block title %}{{ app_name }}{% endblock %} | {{ app_name }}</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+    <div>
+      <div class="brand-text">{{ app_name }}</div>
+      <div class="brand-version">v{{ app_version }} · IBM watsonx</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+{% if session.get("role") == "doctor" %}
+    <div class="nav-section-title">Doctor Portal</div>
+    <a href="/doctor/dashboard" class="nav-item"><i class="fas fa-user-md"></i><span>Doctor Dashboard</span></a>
+    <a href="/doctor/reports" class="nav-item"><i class="fas fa-file-medical"></i><span>Patient Reports</span></a>
+    <a href="/doctor/dashboard" class="nav-item"><i class="fas fa-list"></i><span>Appointment Queue</span></a>
+{% else %}
+    <div class="nav-section-title">Main</div>
+    <a href="/" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="/chat" class="nav-item"><i class="fas fa-robot"></i><span>AI Chat</span></a>
+    <a href="/dashboard" class="nav-item"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
+    <div class="nav-section-title">Medical Tools</div>
+    <a href="/symptoms" class="nav-item"><i class="fas fa-stethoscope"></i><span>Symptom Checker</span></a>
+    <a href="/diseases" class="nav-item"><i class="fas fa-book-medical"></i><span>Disease Info</span></a>
+    <a href="/medications" class="nav-item"><i class="fas fa-pills"></i><span>Medications</span></a>
+    <a href="/reports" class="nav-item"><i class="fas fa-file-medical"></i><span>Medical Reports</span></a>
+    <a href="/pill-reminder" class="nav-item"><i class="fas fa-bell"></i><span>Pill Reminder</span></a>
+    <div class="nav-section-title">Personal Health</div>
+    <a href="/timeline" class="nav-item"><i class="fas fa-history"></i><span>Health Timeline</span></a>
+    <a href="/appointments" class="nav-item"><i class="fas fa-calendar-check"></i><span>Appointments & Video</span></a>
+{% endif %}
+    <div class="nav-section-title">Account</div>
+    <a href="/profile" class="nav-item"><i class="fas fa-user-circle"></i><span>My Profile</span></a>
+{% if session.get("role") == "patient" %}<a href="/settings" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a>{% endif %}
+    <a href="/notifications" class="nav-item"><i class="fas fa-bell"></i><span>Notifications</span></a>
+    <a href="/feedback" class="nav-item"><i class="fas fa-comment-dots"></i><span>Feedback</span></a>
+    <div class="nav-section-title">Info</div>
+    <a href="/about" class="nav-item"><i class="fas fa-info-circle"></i><span>About</span></a>
+    <a href="/contact" class="nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </nav>
+
+  <div style="padding:.5rem .75rem;">
+    {% if session.get("role") == "patient" %}<a href="/doctor/login" class="btn btn-ghost btn-sm w-full"><i class="fas fa-user-md me-1"></i>Doctor Portal</a>{% endif %}
+    {% if session.get("role") == "doctor" %}<a href="/logout" class="btn btn-ghost btn-sm w-full"><i class="fas fa-right-from-bracket me-1"></i>Logout</a>{% endif %}
+  </div>
+  <div class="sidebar-footer">
+    <button onclick="Sidebar.toggle()" class="btn btn-ghost btn-sm w-full" title="Collapse sidebar">
+      <i class="fas fa-chevron-left" id="sidebar-collapse-icon"></i>
+      <span class="ms-2">Collapse</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ MAIN CONTENT ══════════════════════════════════════════════════════ -->
+<div class="main-content" id="main-content">
+
+  <!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+  <header class="topbar" id="topbar">
+    <!-- Mobile menu -->
+    <button class="topbar-btn d-lg-none" onclick="Sidebar.toggleMobile()" title="Menu">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Search -->
+    <div class="topbar-search d-none d-md-block">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" placeholder="Search pages… (Ctrl+K)">
+    </div>
+
+    <div class="topbar-actions">
+      <!-- Dark mode -->
+      <button class="topbar-btn" onclick="Theme.toggle()" title="Toggle dark mode (Ctrl+D)">
+        <i class="fas fa-moon" id="theme-icon"></i>
+      </button>
+
+      <!-- Notifications -->
+      <a href="/notifications" class="topbar-btn" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="badge"></span>
+      </a>
+
+      {% if session.get("role") == "doctor" %}
+      <a href="/doctor/dashboard" class="btn btn-primary btn-sm d-none d-md-flex"><i class="fas fa-user-md"></i> Doctor Portal</a>
+      {% else %}
+      <a href="/chat" class="btn btn-primary btn-sm d-none d-md-flex"><i class="fas fa-plus"></i> New Chat</a>
+      {% endif %}
+
+      <!-- User avatar -->
+      <a href="/profile" class="avatar-btn" title="My Profile">U</a>
+    </div>
+  </header>
+
+  <!-- ── Page Content ───────────────────────────────────────────────────── -->
+  {% block content %}{% endblock %}
+
+</div><!-- end main-content -->
+
+<!-- ═══ TOAST CONTAINER ═══════════════════════════════════════════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ═══ EMERGENCY CONTACTS ════════════════════════════════════════════════ -->
+<button id="sos-fab" class="sos-fab" onclick="Emergency.toggle()" title="Emergency Contacts">
+  <i class="fas fa-phone-alt"></i>
+</button>
+
+<div id="sos-panel" class="sos-panel" style="display:none;">
+  <div class="sos-panel-header">
+    <span><i class="fas fa-ambulance me-2"></i>Emergency Contacts</span>
+    <button class="sos-close-btn" onclick="Emergency.toggle()" title="Close">&times;</button>
+  </div>
+
+  <ul class="sos-list" id="sos-list">
+    <!-- Default 108 — rendered by JS so it stays consistent -->
+  </ul>
+
+  <div class="sos-add-row">
+    <input type="text" id="sos-name-input" class="sos-input" placeholder="Hospital / Contact name">
+    <input type="tel"  id="sos-num-input"  class="sos-input" placeholder="Phone number">
+    <button class="sos-add-btn" onclick="Emergency.addContact()">
+      <i class="fas fa-plus"></i> Add
+    </button>
+  </div>
+</div>
+
+<!-- ═══ MOBILE SIDEBAR OVERLAY ════════════════════════════════════════════ -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:999;"
+     onclick="Sidebar.toggleMobile()"></div>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+
+<script>
+  // Show mobile overlay when sidebar opens
+  document.addEventListener('DOMContentLoaded', () => {
+    const orig = Sidebar.toggleMobile.bind(Sidebar);
+    Sidebar.toggleMobile = function() {
+      orig();
+      const overlay = document.getElementById('sidebar-overlay');
+      if (overlay) overlay.style.display = document.getElementById('sidebar')?.classList.contains('mobile-open') ? 'block' : 'none';
+    };
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,532 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+
+{% block extra_css %}
+<style>
+/* ── Landing Page Styles ─────────────────────────────────────────── */
+.landing-wrapper { margin-left: 0 !important; padding-top: 0 !important; }
+.hero {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0d4a47 100%);
+  display: flex; align-items: center; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-orb {
+  position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.15;
+  animation: gradientShift 8s ease infinite;
+}
+.orb-1 { width: 500px; height: 500px; background: #2563eb; top: -100px; right: -100px; }
+.orb-2 { width: 400px; height: 400px; background: #0d9488; bottom: -100px; left: -50px; }
+.orb-3 { width: 250px; height: 250px; background: #7c3aed; top: 50%; left: 40%; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: #93c5fd; padding: 0.5rem 1.25rem;
+  border-radius: 999px; font-size: 0.875rem; font-weight: 500;
+  backdrop-filter: blur(8px); margin-bottom: 1.5rem;
+}
+.hero-title {
+  font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900;
+  color: white; line-height: 1.1; margin-bottom: 1.5rem;
+}
+.hero-title span {
+  background: linear-gradient(135deg, #60a5fa, #34d399);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-subtitle {
+  font-size: 1.175rem; color: rgba(255,255,255,0.72);
+  line-height: 1.7; margin-bottom: 2.5rem; max-width: 520px;
+}
+.hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-hero-primary {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: white; padding: 0.875rem 2rem;
+  border-radius: 12px; font-weight: 700; font-size: 1rem;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;
+  box-shadow: 0 8px 24px rgba(37,99,235,0.45); transition: all .25s;
+  border: none; cursor: pointer;
+}
+.btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,99,235,0.55); color: white; }
+.btn-hero-outline {
+  background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.25);
+  color: white; padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600;
+  font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: .5rem;
+  backdrop-filter: blur(8px); transition: all .25s;
+}
+.btn-hero-outline:hover { background: rgba(255,255,255,0.15); color: white; }
+
+.hero-stats { display: flex; gap: 2.5rem; margin-top: 3.5rem; flex-wrap: wrap; }
+.hero-stat-val { font-size: 2rem; font-weight: 800; color: white; }
+.hero-stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 500; }
+
+/* Medical Illustration */
+.hero-illustration {
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.med-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px); border-radius: 20px;
+  padding: 1.5rem; color: white;
+}
+.pulse-ring {
+  width: 220px; height: 220px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(37,99,235,0.3), rgba(13,148,136,0.3));
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin: 0 auto 2rem;
+}
+.pulse-ring::before {
+  content: ''; position: absolute; inset: -16px; border-radius: 50%;
+  border: 2px solid rgba(37,99,235,0.3);
+  animation: pulse 2.5s ease infinite;
+}
+.pulse-ring::after {
+  content: ''; position: absolute; inset: -32px; border-radius: 50%;
+  border: 1px solid rgba(37,99,235,0.15);
+  animation: pulse 2.5s ease infinite 0.5s;
+}
+.heart-icon { font-size: 5rem; color: #ef4444; filter: drop-shadow(0 0 20px rgba(239,68,68,0.5)); animation: bounce 2s ease infinite; }
+
+/* Floating cards */
+.floating-card {
+  position: absolute; background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px); border-radius: 14px;
+  padding: 0.875rem 1.125rem; color: white; font-size: 0.82rem;
+}
+.fc-1 { top: 0; left: -40px; animation: float-1 4s ease-in-out infinite; }
+.fc-2 { bottom: 20px; right: -30px; animation: float-2 4.5s ease-in-out infinite; }
+.fc-3 { top: 50%; right: -50px; transform: translateY(-50%); animation: float-1 5s ease-in-out infinite 1s; }
+@keyframes float-1 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes float-2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+/* Features */
+.features-section { padding: 6rem 0; background: var(--bg-secondary); }
+.feature-card {
+  text-align: center; padding: 2rem 1.5rem;
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 20px; transition: all .3s; height: 100%;
+}
+.feature-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(37,99,235,0.12); border-color: rgba(37,99,235,0.3); }
+.feature-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin: 0 auto 1.25rem;
+}
+.feature-card h5 { font-weight: 700; margin-bottom: 0.75rem; }
+.feature-card p { font-size: 0.9rem; color: var(--text-secondary); }
+
+/* Stats */
+.stats-section { padding: 5rem 0; background: linear-gradient(135deg, #0f172a, #1e3a5f); }
+.stat-number { font-size: 3rem; font-weight: 900; color: white; }
+.stat-label { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+
+/* Testimonials */
+.testimonials { padding: 6rem 0; background: var(--bg-primary); }
+.testimonial-card {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 20px; padding: 2rem; height: 100%; transition: all .3s;
+}
+.testimonial-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+.testimonial-stars { color: #f59e0b; margin-bottom: 1rem; font-size: 0.9rem; }
+.testimonial-text { font-style: italic; color: var(--text-secondary); margin-bottom: 1.5rem; }
+.testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
+.testimonial-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 1rem;
+}
+
+/* FAQ */
+.faq-section { padding: 6rem 0; background: var(--bg-secondary); }
+.faq-item {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: 12px; margin-bottom: 0.75rem; overflow: hidden; transition: all .3s;
+}
+.faq-item:hover { border-color: var(--primary-light); }
+.faq-question {
+  padding: 1.125rem 1.5rem; font-weight: 600; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  user-select: none;
+}
+.faq-answer { padding: 0 1.5rem 1.125rem; color: var(--text-secondary); font-size: 0.9rem; display: none; }
+.faq-item.open .faq-answer { display: block; }
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-chevron { transition: transform .25s; color: var(--text-muted); }
+
+/* CTA Section */
+.cta-section {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #2563eb, #0d9488);
+}
+.cta-title { font-size: 2.5rem; font-weight: 900; color: white; }
+.cta-sub { color: rgba(255,255,255,0.8); font-size: 1.1rem; }
+
+/* Footer */
+.footer {
+  background: #0f172a; color: rgba(255,255,255,0.6);
+  padding: 4rem 0 2rem;
+}
+.footer-brand { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.footer-brand-icon {
+  width: 38px; height: 38px; background: linear-gradient(135deg, #2563eb, #0d9488);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;
+}
+.footer-brand-name { font-size: 1.2rem; font-weight: 800; color: white; }
+.footer h6 { color: white; font-weight: 600; margin-bottom: 1.25rem; }
+.footer-link { color: rgba(255,255,255,0.55); text-decoration: none; display: block; margin-bottom: 0.5rem; font-size: 0.875rem; transition: color .2s; }
+.footer-link:hover { color: white; }
+.footer-divider { border-color: rgba(255,255,255,0.1); margin: 2rem 0 1.5rem; }
+.footer-bottom { font-size: 0.8rem; }
+
+/* Nav override for landing */
+.landing-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  padding: 1rem 2rem;
+  background: rgba(15,23,42,0.85); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 2rem;
+}
+.landing-nav-brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+.landing-nav-links { display: flex; gap: 0.25rem; margin-left: auto; align-items: center; flex-wrap: wrap; }
+.landing-nav-link { color: rgba(255,255,255,0.7); text-decoration: none; padding: 0.5rem 0.875rem; border-radius: 8px; font-size: 0.875rem; font-weight: 500; transition: all .2s; }
+.landing-nav-link:hover { color: white; background: rgba(255,255,255,0.08); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="landing-wrapper">
+  <!-- Override main-content default layout -->
+  <style>
+    .main-content { margin-left: 0 !important; padding-top: 0 !important; }
+    #sidebar, #topbar { display: none !important; }
+  </style>
+
+  <!-- ── Landing Navigation ──────────────────────────────────────────────── -->
+  <nav class="landing-nav">
+    <a class="landing-nav-brand" href="/">
+      <div class="footer-brand-icon"><i class="fas fa-heartbeat"></i></div>
+      <span class="footer-brand-name">{{ app_name }}</span>
+    </a>
+    <div class="landing-nav-links">
+      <a href="#features" class="landing-nav-link">Features</a>
+      <a href="#stats" class="landing-nav-link">Why Us</a>
+      <a href="#testimonials" class="landing-nav-link">Testimonials</a>
+      <a href="#faq" class="landing-nav-link">FAQ</a>
+      <a href="/login" class="landing-nav-link">Login</a>
+      <a href="/chat" class="btn-hero-primary" style="padding:.5rem 1.25rem;font-size:.875rem;">Try Free →</a>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       HERO SECTION
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="home">
+    <div class="hero-orb orb-1"></div>
+    <div class="hero-orb orb-2"></div>
+    <div class="hero-orb orb-3"></div>
+
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <div class="hero-badge fade-in">
+            <i class="fas fa-circle" style="color:#34d399;font-size:.5rem;"></i>
+            Powered by IBM watsonx Orchestrate
+          </div>
+          <h1 class="hero-title fade-in" style="animation-delay:80ms">
+            Your AI-Powered <span>Medical Assistant</span> for Smarter Health
+          </h1>
+          <p class="hero-subtitle fade-in" style="animation-delay:160ms">
+            Get instant, evidence-based health education, symptom analysis, disease information,
+            and personalized wellness guidance — all powered by enterprise AI.
+          </p>
+          <div class="hero-cta fade-in" style="animation-delay:240ms">
+            <a href="/chat" class="btn-hero-primary">
+              <i class="fas fa-robot"></i> Start AI Chat
+            </a>
+            <a href="#features" class="btn-hero-outline">
+              <i class="fas fa-play"></i> Explore Features
+            </a>
+          </div>
+          <div class="hero-stats fade-in" style="animation-delay:360ms">
+            <div>
+              <div class="hero-stat-val">10+</div>
+              <div class="hero-stat-label">AI Health Tools</div>
+            </div>
+            <div style="width:1px;background:rgba(255,255,255,0.15)"></div>
+            <div>
+              <div class="hero-stat-val">IBM</div>
+              <div class="hero-stat-label">watsonx Powered</div>
+            </div>
+            <div style="width:1px;background:rgba(255,255,255,0.15)"></div>
+            <div>
+              <div class="hero-stat-val">24/7</div>
+              <div class="hero-stat-label">AI Availability</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+          <div class="hero-illustration" style="position:relative;width:480px;height:420px;">
+            <!-- Central card -->
+            <div class="med-card" style="position:relative;z-index:2;width:280px;margin:0 auto;text-align:center;">
+              <div class="pulse-ring">
+                <i class="fas fa-heartbeat heart-icon"></i>
+              </div>
+              <div style="font-weight:700;font-size:1.1rem;color:white;margin-bottom:0.5rem;">DoctorTalk</div>
+              <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);">IBM watsonx Orchestrate</div>
+              <div style="display:flex;gap:0.5rem;justify-content:center;margin-top:1rem;">
+                <span style="background:rgba(52,211,153,0.2);color:#34d399;padding:.25rem .625rem;border-radius:999px;font-size:.72rem;font-weight:600;">● Live</span>
+                <span style="background:rgba(96,165,250,0.2);color:#60a5fa;padding:.25rem .625rem;border-radius:999px;font-size:.72rem;font-weight:600;">AI Active</span>
+              </div>
+            </div>
+            <!-- Floating info cards -->
+            <div class="floating-card fc-1">
+              <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;margin-bottom:.25rem;">
+                <i class="fas fa-stethoscope" style="color:#60a5fa;"></i> Symptom Check
+              </div>
+              <div style="color:rgba(255,255,255,0.7);font-size:.75rem;">AI-powered analysis</div>
+            </div>
+            <div class="floating-card fc-2">
+              <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;margin-bottom:.25rem;">
+                <i class="fas fa-pills" style="color:#a78bfa;"></i> Medication Info
+              </div>
+              <div style="color:rgba(255,255,255,0.7);font-size:.75rem;">Side effects & interactions</div>
+            </div>
+            <div class="floating-card fc-3">
+              <div style="display:flex;align-items:center;gap:.5rem;font-weight:600;margin-bottom:.25rem;">
+                <i class="fas fa-chart-line" style="color:#34d399;"></i> Health Score
+              </div>
+              <div style="color:rgba(255,255,255,0.7);font-size:.75rem;">92/100 — Excellent</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FEATURES SECTION
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="text-center mb-5">
+        <div class="badge-pill badge-primary mb-3" style="margin:0 auto;display:inline-flex;">AI Features</div>
+        <h2 style="font-size:2.25rem;font-weight:900;">Everything You Need for <span class="text-gradient">Smarter Health</span></h2>
+        <p class="text-muted mt-2" style="max-width:520px;margin:0 auto;">A comprehensive AI health platform designed for individuals who want actionable, personalized healthcare education.</p>
+      </div>
+
+      <div class="row g-4 stagger">
+        {% set features = [
+          ('fa-robot','bg-primary','AI Chat Assistant','Ask health questions in natural language and get instant, comprehensive answers from IBM watsonx.','/chat'),
+          ('fa-stethoscope','bg-teal','Symptom Checker','Describe your symptoms and receive educational analysis, specialist recommendations, and warning signs.','/symptoms'),
+          ('fa-book-medical','bg-purple','Disease Library','Deep-dive into any chronic condition with complete information on causes, treatments, and prevention.','/diseases'),
+          ('fa-pills','bg-green','Medication Info','Comprehensive drug information including uses, dosage, side effects, and drug interactions.','/medications'),
+          ('fa-bell','bg-warm','Pill Reminder','Set daily reminders for every pill with dose time, instructions, and browser alerts — perfect for elderly patients.','/pill-reminder'),
+          ('fa-file-medical-alt','bg-amber','Report Analysis','Upload your medical reports (PDF/DOCX) and get plain-language AI explanations.','/reports'),
+          ('fa-chart-line','bg-primary','Health Dashboard','Track vitals, medications, appointments, goals, sleep, and exercise in one beautiful view.','/dashboard'),
+          ('fa-history','bg-teal','Health Timeline','Maintain a chronological health history with important medical events and milestones.','/timeline'),
+          ('fa-calendar-check','bg-purple','Appointments','Schedule and track healthcare appointments with reminder notifications.','/appointments'),
+          ('fa-shield-alt','bg-green','Safety First','Every response includes medical disclaimers and recommendations to consult professionals.','/about'),
+          ('fa-moon','bg-warm','Dark Mode','Switch between beautiful light and dark themes optimized for any lighting condition.','/settings'),
+          ('fa-volume-up','bg-amber','Voice Interface','Listen to AI responses with text-to-speech and input using voice recognition.','/chat'),
+        ] %}
+        {% for icon, color, title, desc, url in features %}
+        <div class="col-md-6 col-lg-4 fade-in">
+          <div class="feature-card" onclick="window.location.href='{{ url }}'" style="cursor:pointer;">
+            <div class="feature-icon card-gradient-{{ color.replace('bg-','') }}" style="background:none;">
+              <div class="feature-icon {% if color == 'bg-primary' %}card-gradient-blue{% elif color == 'bg-teal' %}card-gradient-teal{% elif color == 'bg-purple' %}card-gradient-purple{% elif color == 'bg-green' %}card-gradient-green{% elif color == 'bg-warm' %}card-gradient-warm{% else %}card-gradient-amber{% endif %}">
+                <i class="fas {{ icon }}"></i>
+              </div>
+            </div>
+            <h5>{{ title }}</h5>
+            <p>{{ desc }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       STATS SECTION
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="stats-section" id="stats">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 style="font-size:2rem;font-weight:900;color:white;">Trusted Health Education Platform</h2>
+        <p style="color:rgba(255,255,255,0.6);margin-top:.5rem;">Built on enterprise-grade IBM watsonx AI technology</p>
+      </div>
+      <div class="row g-4 text-center stagger">
+        <div class="col-6 col-md-3 fade-in">
+          <div class="stat-number">10+</div>
+          <div class="stat-label">AI-Powered Tools</div>
+        </div>
+        <div class="col-6 col-md-3 fade-in">
+          <div class="stat-number">1000+</div>
+          <div class="stat-label">Diseases Covered</div>
+        </div>
+        <div class="col-6 col-md-3 fade-in">
+          <div class="stat-number">5000+</div>
+          <div class="stat-label">Medications Indexed</div>
+        </div>
+        <div class="col-6 col-md-3 fade-in">
+          <div class="stat-number">24/7</div>
+          <div class="stat-label">AI Availability</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TESTIMONIALS
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="text-center mb-5">
+        <div class="badge-pill badge-secondary mb-3" style="margin:0 auto;display:inline-flex;">Testimonials</div>
+        <h2 style="font-size:2rem;font-weight:900;">What Users Are Saying</h2>
+      </div>
+      <div class="row g-4 stagger">
+        {% set testimonials = [
+          ('The symptom checker helped me understand my condition before my appointment. The AI explanations are incredibly clear!', 'Sarah M.', 'Diabetes Patient', '#2563eb'),
+          ('I use the medication info feature daily. It saves me so much time explaining drug interactions to patients families.', 'Dr. James K.', 'Family Physician', '#0d9488'),
+          ('Finally an AI health app that is both smart AND safe. Every response has proper disclaimers. Very responsible.', 'Michael R.', 'Health Researcher', '#7c3aed'),
+          ('The report upload feature is a game changer. Plain-language explanations of lab results helped me so much.', 'Emily T.', 'Patient Advocate', '#059669'),
+          ('Beautiful design, responsive on mobile, and the AI chat is remarkably knowledgeable. Highly recommended!', 'David L.', 'Wellness Coach', '#d97706'),
+          ('The IBM watsonx integration gives me confidence in the accuracy of the health information provided.', 'Dr. Lisa P.', 'Cardiologist', '#dc2626'),
+        ] %}
+        {% for text, name, role, color in testimonials %}
+        <div class="col-md-6 col-lg-4 fade-in">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"{{ text }}"</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar" style="background:{{ color }}">{{ name[0] }}</div>
+              <div>
+                <div style="font-weight:700;font-size:.9rem;">{{ name }}</div>
+                <div style="font-size:.8rem;color:var(--text-muted);">{{ role }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FAQ SECTION
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="text-center mb-5">
+        <div class="badge-pill badge-primary mb-3" style="margin:0 auto;display:inline-flex;">FAQ</div>
+        <h2 style="font-size:2rem;font-weight:900;">Frequently Asked Questions</h2>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          {% set faqs = [
+            ('Is DoctorTalk a replacement for my doctor?', 'No. DoctorTalk is an educational health resource powered by IBM watsonx AI. It provides health information, disease education, and wellness guidance, but does NOT replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional.'),
+            ('How does the IBM watsonx integration work?', 'DoctorTalk connects to IBM watsonx Orchestrate via a secure API key stored in a .env file. The AI processes your health questions and returns evidence-based educational responses. Your API key is never exposed in the frontend.'),
+            ('Is my health data private?', 'DoctorTalk does not permanently store personal health data. Conversations are kept in your browser session only. No personal health information is sent to third-party servers beyond the watsonx API for generating responses.'),
+            ('What file formats can I upload for report analysis?', 'You can upload PDF, DOCX (Microsoft Word), and TXT files. The system extracts the text content and sends it to IBM watsonx for plain-language explanation.'),
+            ('Can I use voice input for the AI chat?', 'Yes! The chat interface supports voice input via the Web Speech API. Click the microphone icon to speak your health question. Text-to-speech is also available to have responses read aloud.'),
+            ('How do I configure my IBM watsonx API key?', 'Copy the env.example file to .env in the project root, then add your WATSONX_API_KEY and WATSONX_PROJECT_ID from IBM Cloud. The app will use demo mode if keys are not configured.'),
+          ] %}
+          {% for q, a in faqs %}
+          <div class="faq-item" onclick="this.classList.toggle('open')">
+            <div class="faq-question">
+              <span>{{ q }}</span>
+              <i class="fas fa-chevron-down faq-chevron"></i>
+            </div>
+            <div class="faq-answer">{{ a }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       CTA SECTION
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <section class="cta-section">
+    <div class="container text-center">
+      <h2 class="cta-title mb-3">Ready to Transform Your Health Journey?</h2>
+      <p class="cta-sub mb-4">Start chatting with DoctorTalk — your intelligent health education companion.</p>
+      <a href="/chat" class="btn-hero-primary" style="margin:0 auto;display:inline-flex;font-size:1.1rem;padding:1rem 2.5rem;">
+        <i class="fas fa-robot"></i> Start Free with AI Chat
+      </a>
+      <p style="color:rgba(255,255,255,0.5);margin-top:1.5rem;font-size:.8rem;">
+        No signup required to try · IBM watsonx Orchestrate powered · Always includes medical disclaimers
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="footer-brand">
+            <div class="footer-brand-icon"><i class="fas fa-heartbeat"></i></div>
+            <span class="footer-brand-name">{{ app_name }}</span>
+          </div>
+          <p style="font-size:.875rem;line-height:1.7;max-width:300px;">
+            Enterprise AI Medical Assistant powered by IBM watsonx Orchestrate.
+            Providing evidence-based health education and wellness guidance.
+          </p>
+          <div class="disclaimer-box mt-3" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);">
+            <i class="fas fa-shield-alt" style="color:#f59e0b;"></i>
+            <span style="font-size:.75rem;color:rgba(255,255,255,.5);">For educational purposes only. Not a substitute for professional medical advice.</span>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Tools</h6>
+          <a href="/chat" class="footer-link">AI Chat</a>
+          <a href="/symptoms" class="footer-link">Symptoms</a>
+          <a href="/diseases" class="footer-link">Diseases</a>
+          <a href="/medications" class="footer-link">Medications</a>
+          <a href="/pill-reminder" class="footer-link">Pill Reminder</a>
+          <a href="/reports" class="footer-link">Reports</a>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Health</h6>
+          <a href="/dashboard" class="footer-link">Dashboard</a>
+          <a href="/timeline" class="footer-link">Timeline</a>
+          <a href="/appointments" class="footer-link">Appointments</a>
+          <a href="/profile" class="footer-link">Profile</a>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Company</h6>
+          <a href="/about" class="footer-link">About</a>
+          <a href="/contact" class="footer-link">Contact</a>
+          <a href="/feedback" class="footer-link">Feedback</a>
+          <a href="/settings" class="footer-link">Settings</a>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Account</h6>
+          <a href="/login" class="footer-link">Login</a>
+          <a href="/register" class="footer-link">Register</a>
+          <a href="/profile" class="footer-link">My Profile</a>
+          <a href="/notifications" class="footer-link">Notifications</a>
+        </div>
+      </div>
+      <hr class="footer-divider">
+      <div class="row footer-bottom">
+        <div class="col-md-6">© 2024 {{ app_name }}. Built with IBM watsonx Orchestrate.</div>
+        <div class="col-md-6 text-md-end">Flask · Python · Bootstrap 5 · IBM AI</div>
+      </div>
+    </div>
+  </footer>
+</div>
+{% endblock %}

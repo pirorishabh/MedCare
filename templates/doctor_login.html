@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Doctor Login{% endblock %}
+{% block extra_css %}<style>
+.main-content{margin-left:0!important;padding-top:0!important}#sidebar,#topbar{display:none!important}
+.auth-page{min-height:100vh;background:linear-gradient(135deg,#0b1220,#123b57,#0f766e);display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-card{width:100%;max-width:440px;background:rgba(255,255,255,.07);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:2.5rem;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+.auth-input{width:100%;padding:.85rem 1rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:12px;color:white;outline:none}.auth-input:focus{border-color:#60a5fa}
+.auth-label{color:rgba(255,255,255,.82);font-size:.875rem;font-weight:600;display:block;margin-bottom:.4rem}
+</style>{% endblock %}
+{% block content %}
+<div class="auth-page"><div class="auth-card">
+  <div style="text-align:center;margin-bottom:2rem"><div style="font-size:3rem">🩺</div><h2 style="color:white;font-weight:800">Doctor Portal</h2><p style="color:rgba(255,255,255,.6)">Sign in to manage patients, reports and consultations</p></div>
+  <div id="login-error" style="display:none;background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.3);color:#fecaca;padding:.75rem 1rem;border-radius:10px;margin-bottom:1rem"></div>
+  <form id="doctor-login-form">
+    <label class="auth-label">Doctor Email</label><input id="d-email" class="auth-input" type="email" autocomplete="username" required>
+    <label class="auth-label" style="margin-top:1rem">Password</label><input id="d-pass" class="auth-input" type="password" autocomplete="current-password" required>
+    <button id="d-btn" type="submit" class="btn btn-primary w-full" style="margin-top:1.25rem;padding:.85rem"><i class="fas fa-right-to-bracket me-2"></i>Sign In as Doctor</button>
+  </form>
+  <p style="text-align:center;color:rgba(255,255,255,.55);margin-top:1.5rem">New doctor? <a href="/doctor/register" style="color:#60a5fa">Create doctor account</a><br><a href="/login" style="color:#60a5fa">Patient login</a></p>
+</div></div>
+{% endblock %}
+{% block extra_js %}<script>
+document.getElementById('doctor-login-form').addEventListener('submit', async (e)=>{
+ e.preventDefault(); const btn=document.getElementById('d-btn'), err=document.getElementById('login-error'); err.style.display='none'; btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin me-2"></i>Signing in…';
+ try{
+   const r=await fetch('/api/auth/doctor/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email:document.getElementById('d-email').value.trim(),password:document.getElementById('d-pass').value})});
+   const d=await r.json();
+   if(!r.ok || d.status==='error') throw new Error(d.message||'Invalid doctor credentials');
+   if(d.role!=='doctor') throw new Error('This account is not registered as a doctor.');
+   window.location.replace(d.redirect||'/doctor/dashboard');
+ }catch(x){err.textContent=x.message;err.style.display='block';btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket me-2"></i>Sign In as Doctor';}
+});
+</script>{% endblock %}

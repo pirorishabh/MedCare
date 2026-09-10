@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Health Timeline{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='timeline'</script>
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Health History Timeline</h1>
+      <p class="page-subtitle">A chronological record of your important health events and milestones.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,var(--primary),var(--secondary));">
+      <i class="fas fa-history"></i>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Add Event Form -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-plus-circle" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Add Health Event</span>
+        </div>
+        <div class="card-body">
+          <form id="timeline-form">
+            <div class="form-group">
+              <label class="form-label">Event Title *</label>
+              <input type="text" id="event-title" class="form-control" placeholder="e.g. Blood pressure check, New diagnosis…">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date *</label>
+              <input type="date" id="event-date" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Event Type</label>
+              <select id="event-type" class="form-control">
+                <option value="primary">General Health Event</option>
+                <option value="success">Positive / Recovery</option>
+                <option value="warning">Warning / Follow-up Needed</option>
+                <option value="danger">Emergency / Serious</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes</label>
+              <textarea id="event-notes" class="form-control" rows="3" placeholder="Additional details, doctor notes, test results…"></textarea>
+            </div>
+            <button type="button" id="add-event-btn" class="btn btn-primary w-full">
+              <i class="fas fa-plus me-2"></i>Add to Timeline
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="card mt-3">
+        <div class="card-body">
+          <div style="font-weight:700;font-size:.875rem;margin-bottom:.75rem;">Event Types</div>
+          {% for color, label in [('primary','General Event'),('success','Positive / Recovery'),('warning','Follow-up Needed'),('danger','Emergency / Serious')] %}
+          <div style="display:flex;align-items:center;gap:.625rem;padding:.375rem 0;">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--{{ color }});flex-shrink:0;"></div>
+            <span style="font-size:.85rem;color:var(--text-secondary);">{{ label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-stream" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Your Health Timeline</span>
+          <span class="badge-pill badge-primary ms-auto" id="event-count"></span>
+        </div>
+        <div class="card-body">
+          <div id="timeline-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add sample events for demonstration
+document.addEventListener('DOMContentLoaded', () => {
+  if (!localStorage.getItem('health-timeline')) {
+    const sample = [
+      { id: 1, title: 'Annual Physical Examination', date: '2024-01-10', notes: 'All vitals normal. Cholesterol slightly elevated — diet modifications recommended.', type: 'primary' },
+      { id: 2, title: 'Blood Pressure — 138/88 mmHg', date: '2023-12-15', notes: 'Pre-hypertension range. Started lifestyle modifications.', type: 'warning' },
+      { id: 3, title: 'Completed 6-Week Exercise Program', date: '2023-11-30', notes: 'Lost 4kg. Blood pressure improved to 128/82.', type: 'success' },
+      { id: 4, title: 'Diagnosed with Type 2 Diabetes', date: '2023-08-20', notes: 'HbA1c 7.2%. Started Metformin 500mg twice daily.', type: 'warning' },
+      { id: 5, title: 'Eye Examination — Diabetic Screening', date: '2023-09-10', notes: 'No signs of retinopathy. Annual follow-up recommended.', type: 'primary' },
+    ];
+    localStorage.setItem('health-timeline', JSON.stringify(sample));
+  }
+  HealthTimeline.init();
+  const countEl = document.getElementById('event-count');
+  if (countEl) countEl.textContent = HealthTimeline.events.length + ' events';
+});
+</script>
+{% endblock %}

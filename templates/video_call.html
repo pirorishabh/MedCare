@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% block title %}Video Consultation{% endblock %}{% block extra_css %}<style>.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}@media(max-width:800px){.video-grid{grid-template-columns:1fr}}video{width:100%;background:#0b1220;border-radius:16px;min-height:280px;object-fit:cover}</style>{% endblock %}{% block content %}<div class="page-content"><div class="page-header"><div><h1 class="page-title">Video Consultation</h1><p class="page-subtitle">Secure appointment video consultation</p></div><a href="/" class="btn btn-ghost">Exit</a></div><div class="disclaimer-box mb-4"><i class="fas fa-shield-alt"></i><div>Video uses WebRTC with browser microphone/camera permissions. For production healthcare use, deploy a properly secured, compliant video infrastructure.</div></div><div class="video-grid"><div class="card"><div class="card-header"><b>Your camera</b></div><div class="card-body"><video id="local" autoplay muted playsinline></video></div></div><div class="card"><div class="card-header"><b>Other participant</b></div><div class="card-body"><video id="remote" autoplay playsinline></video></div></div></div><div class="card mt-4"><div class="card-body" style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap"><button id="join-btn" class="btn btn-primary" onclick="startCall()"><i class="fas fa-video me-1"></i>Start / Join Video Call</button><button class="btn btn-ghost" onclick="toggleMic()">Mic</button><button class="btn btn-ghost" onclick="toggleCam()">Camera</button><span id="call-status" class="text-muted">Ready</span></div></div></div>{% endblock %}{% block extra_js %}<script>
+const ROOM={{ room_id|tojson }};
+const ROLE={{ session.get('role')|tojson }};
+let pc=null,localStream=null,isCaller=(ROLE==='patient');let lastCaller=0,lastCallee=0;
+function setStatus(t){document.getElementById('call-status').textContent=t}
+async function startCall(){
+  if(pc)return;
+  try{
+    document.getElementById('join-btn').disabled=true; setStatus('Requesting camera and microphone…');
+    localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    document.getElementById('local').srcObject=localStream;
+    pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    pc.ontrack=e=>{document.getElementById('remote').srcObject=e.streams[0];setStatus('Video connected')};
+    pc.onicecandidate=e=>e.candidate&&sendSignal(isCaller?'caller-candidate':'callee-candidate',e.candidate);
+    if(isCaller){
+      const offer=await pc.createOffer(); await pc.setLocalDescription(offer); await sendSignal('offer',offer); setStatus('Waiting for doctor to join…');
+    }else{setStatus('Ready — waiting for patient…')}
+    poll();
+  }catch(e){console.error(e);setStatus('Camera/microphone permission or connection failed');document.getElementById('join-btn').disabled=false;}
+}
+async function sendSignal(kind,value){await fetch('/api/video/'+encodeURIComponent(ROOM),{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({kind,value})})}
+async function poll(){
+  try{
+    const r=await fetch('/api/video/'+encodeURIComponent(ROOM),{credentials:'same-origin'});const d=await r.json();if(!r.ok)throw Error(d.message||'Signaling failed');if(!pc)return;
+    if(!isCaller&&d.offer&&!pc.currentRemoteDescription){await pc.setRemoteDescription(d.offer);const a=await pc.createAnswer();await pc.setLocalDescription(a);await sendSignal('answer',a);setStatus('Connecting to patient…')}
+    if(isCaller&&d.answer&&!pc.currentRemoteDescription){await pc.setRemoteDescription(d.answer);setStatus('Connecting to doctor…')}
+    const cs=isCaller?(d.callee_candidates||[]):(d.caller_candidates||[]);const count=isCaller?lastCallee:lastCaller;
+    for(let i=count;i<cs.length;i++){try{await pc.addIceCandidate(cs[i])}catch(e){console.warn('ICE candidate',e)}}
+    if(isCaller)lastCallee=cs.length;else lastCaller=cs.length;
+  }catch(e){console.error(e)}
+  if(pc)setTimeout(poll,1000);
+}
+function toggleMic(){localStream?.getAudioTracks().forEach(t=>t.enabled=!t.enabled)}
+function toggleCam(){localStream?.getVideoTracks().forEach(t=>t.enabled=!t.enabled)}
+</script>{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+<script>document.body.dataset.page='notifications'</script>
+
+{% block content %}
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Notification Center</h1>
+      <p class="page-subtitle">Stay on top of your health reminders and alerts.</p>
+    </div>
+    <div style="display:flex;gap:.75rem;">
+      <button class="btn btn-ghost btn-sm" onclick="markAllRead()"><i class="fas fa-check-double me-1"></i>Mark All Read</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearAll()"><i class="fas fa-trash-alt me-1"></i>Clear All</button>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="tab-nav mb-4">
+    <button class="tab-btn active" onclick="filterNotifs('all',this)">All <span class="badge-pill badge-primary ms-1" style="font-size:.7rem;padding:.15rem .5rem;">8</span></button>
+    <button class="tab-btn" onclick="filterNotifs('unread',this)">Unread</button>
+    <button class="tab-btn" onclick="filterNotifs('medication',this)">Medications</button>
+    <button class="tab-btn" onclick="filterNotifs('appointment',this)">Appointments</button>
+    <button class="tab-btn" onclick="filterNotifs('health',this)">Health Tips</button>
+  </div>
+
+  <div class="card">
+    <div id="notification-list" class="card-body" style="padding:.5rem;">
+      {% set notifications = [
+        ('medication','Medication Reminder','Time to take Metformin 500mg','2 minutes ago',False,'fa-pills','danger'),
+        ('appointment','Appointment Tomorrow','Cardiology appointment with Dr. Sarah Johnson — 10:30 AM','1 hour ago',False,'fa-calendar-check','primary'),
+        ('health','Daily Health Tip','Stay hydrated! Aim for 8 glasses of water today to support kidney health.','3 hours ago',True,'fa-lightbulb','warning'),
+        ('medication','Medication Taken','Lisinopril 10mg marked as taken','5 hours ago',True,'fa-check-circle','success'),
+        ('appointment','Appointment Reminder','Eye examination in 3 days — Don\'t forget to bring your glasses.','Yesterday','fa-eye','secondary',True),
+        ('health','Health Goal Achieved','Congratulations! You reached your 10,000 steps goal today!','Yesterday',True,'fa-trophy','warning'),
+        ('medication','Medication Refill Due','Metformin prescription expires in 5 days. Schedule a refill.','2 days ago',True,'fa-exclamation-circle','warning'),
+        ('health','Weekly Health Summary','Your health score this week: 89/100. Keep it up!','3 days ago',True,'fa-chart-line','primary'),
+      ] %}
+      {% for type, title, message, time, read, icon, color in notifications %}
+      <div class="notif-item" data-type="{{ type }}" style="display:flex;align-items:flex-start;gap:.875rem;padding:.875rem 1rem;border-radius:12px;transition:all .2s;{% if not read %}background:rgba(37,99,235,.04);{% endif %}">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas {{ icon }}" style="color:var(--{{ color }});font-size:.9rem;"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">
+            <span style="font-weight:{% if not read %}700{% else %}600{% endif %};font-size:.875rem;">{{ title }}</span>
+            {% if not read %}<span style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;"></span>{% endif %}
+          </div>
+          <div style="font-size:.82rem;color:var(--text-secondary);">{{ message }}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;"><i class="far fa-clock me-1"></i>{{ time }}</div>
+        </div>
+        <button onclick="this.closest('.notif-item').remove()" class="topbar-btn" style="flex-shrink:0;width:28px;height:28px;font-size:.75rem;" title="Dismiss">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterNotifs(type, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.notif-item').forEach(item => {
+    item.style.display = (type === 'all' || item.dataset.type === type) ? 'flex' : 'none';
+  });
+}
+function markAllRead() {
+  document.querySelectorAll('.notif-item span[style*="background:var(--primary)"]').forEach(el => el.remove());
+  document.querySelectorAll('.notif-item').forEach(el => el.style.background = '');
+  Toast.success('Done', 'All notifications marked as read.');
+}
+function clearAll() {
+  if (confirm('Clear all notifications?')) {
+    document.getElementById('notification-list').innerHTML = '<div class="text-center py-5 text-muted"><i class="fas fa-bell-slash fa-2x mb-3 d-block" style="opacity:.3;"></i>No notifications</div>';
+    Toast.info('Cleared', 'All notifications cleared.');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Medical Reports{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.page='reports'</script>
+<div class="page-content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Medical Report Analysis</h1>
+      <p class="page-subtitle">Upload your medical reports for AI-powered plain-language explanations.</p>
+    </div>
+    <div class="page-header-icon" style="background:linear-gradient(135deg,#dc2626,#f87171);">
+      <i class="fas fa-file-medical-alt"></i>
+    </div>
+  </div>
+
+  <div class="disclaimer-box mb-4">
+    <i class="fas fa-lock"></i>
+    <div>
+      <strong>Privacy Note:</strong> Your uploaded report is securely associated with your account so you can review it and, when you have an appointment with a doctor, that doctor can review the report.
+      The report content is sent to IBM watsonx to generate explanations. Do not upload files with sensitive identifying information
+      if you are concerned about privacy.
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Upload Zone -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <i class="fas fa-cloud-upload-alt" style="color:var(--primary);"></i>
+          <span style="font-weight:700;">Upload Report</span>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-icon"><i class="fas fa-file-medical"></i></div>
+            <div class="upload-title">Drop your medical report here</div>
+            <div class="upload-subtitle">or click to browse files</div>
+            <div style="margin-top:1rem;font-size:.78rem;color:var(--text-muted);">
+              Supported: PDF, DOCX, TXT · Max 16MB
+            </div>
+          </div>
+          <input type="file" id="file-input" accept=".pdf,.docx,.txt" style="display:none;">
+
+          <div style="margin-top:1.5rem;">
+            <div style="font-size:.8rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem;">What can I upload?</div>
+            {% set types = [
+              ('fa-file-pdf','PDF','Lab results, discharge summaries, imaging reports','danger'),
+              ('fa-file-word','DOCX','Doctor notes, referral letters, prescriptions','primary'),
+              ('fa-file-alt','TXT','Plain text medical notes and reports','success'),
+            ] %}
+            {% for icon, fmt, desc, color in types %}
+            <div style="display:flex;align-items:center;gap:.75rem;padding:.625rem;background:var(--bg-tertiary);border-radius:10px;margin-bottom:.5rem;">
+              <i class="fas {{ icon }}" style="color:var(--{{ color }});font-size:1.25rem;flex-shrink:0;"></i>
+              <div>
+                <div style="font-weight:600;font-size:.85rem;">{{ fmt }}</div>
+                <div style="font-size:.75rem;color:var(--text-muted);">{{ desc }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Result -->
+    <div class="col-lg-7">
+      <div id="report-result">
+        <div class="card h-100">
+          <div class="card-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;text-align:center;">
+            <div style="width:80px;height:80px;border-radius:50%;background:rgba(220,38,38,.1);display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;">
+              <i class="fas fa-file-medical-alt" style="font-size:2rem;color:var(--danger);"></i>
+            </div>
+            <h5 style="font-weight:700;margin-bottom:.75rem;">Upload a Medical Report</h5>
+            <p style="color:var(--text-muted);max-width:360px;font-size:.9rem;">
+              Upload a PDF, DOCX, or TXT medical report and IBM watsonx AI will explain the contents in plain, easy-to-understand language.
+            </p>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:1.25rem;">
+              <span class="badge-pill badge-primary">Lab Results</span>
+              <span class="badge-pill badge-success">Discharge Summary</span>
+              <span class="badge-pill badge-warning">Imaging Reports</span>
+              <span class="badge-pill badge-secondary">Prescriptions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
